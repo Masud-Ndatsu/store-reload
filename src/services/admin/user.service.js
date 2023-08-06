@@ -6,11 +6,14 @@ class UserService {
       const page = req.query.page ? Number(req.query.page) : 1;
       const limit = req.query.limit ? Number(req.query.limit) : 5;
       const skipDocuments = (page - 1) * limit;
-      const totalDocuments = await User.countDocuments({});
+      const totalDocuments = await User.countDocuments({ role: "user" });
 
       const totalPages = Math.ceil(totalDocuments / limit);
 
-      const users = await User.find({}).limit(limit).skip(skipDocuments).lean();
+      const users = await User.find({ role: "user" })
+        .limit(limit)
+        .skip(skipDocuments)
+        .lean();
 
       return { data: { users, totalPages } };
     } catch (error) {
