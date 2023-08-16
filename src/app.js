@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import compression from "compression";
 import connectDB from "./db/connection.js";
 import { handle404, handleError } from "./middlewares/error.middlewares.js";
 import appRoutes from "./routes/app/index.js";
@@ -17,7 +18,9 @@ if (process.env.NODE_ENV === "dev") {
   app.use(morgan("common"));
 }
 
+app.set("trust-proxy", true);
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: "10kb" })); // This would limit the body size to 10kb
 app.use(express.urlencoded({ extended: true, limit: "10kb" })); // This would limit the body size to 10kb
 app.use(limiter);
