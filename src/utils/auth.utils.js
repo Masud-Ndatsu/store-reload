@@ -1,8 +1,8 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 const { sign, verify } = jwt;
-import { promisify } from 'util';
-import sendMail from '../services/email/nodemailer';
+import { promisify } from "util";
+import sendMail from "../services/email/nodemailer";
 const { SALT, SIGNATURE } = process.env;
 
 export const createHash = async (sentData) => {
@@ -18,7 +18,7 @@ export const verifyHash = async (sentData, accurateData) => {
 const _signJWT = promisify(sign);
 const _verifyJWT = promisify(verify);
 
-export const generateToken = async (payload, expirationTime = '60d') => {
+export const generateToken = async (payload, expirationTime = "60d") => {
   const token = await _signJWT(payload, SIGNATURE, {
     expiresIn: expirationTime,
   });
@@ -39,7 +39,7 @@ export const generateAndSendUserOTP = async (email) => {
   const otp = _generateVerificationCode();
   const into = await sendMail({
     email: email,
-    subject: 'Reset Password Token',
+    subject: "Reset Password Token",
     message: `<h1>Hello. This is your OTP: ${otp} </h1>`,
   });
   return otp;

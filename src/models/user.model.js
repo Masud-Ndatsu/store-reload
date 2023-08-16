@@ -25,6 +25,9 @@ const schema = new Schema(
       type: String,
       // unique: true,
     },
+    avatar: {
+      type: String,
+    },
     shopName: {
       type: String,
       index: true,
