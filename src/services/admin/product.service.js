@@ -13,8 +13,9 @@ class ProductService {
       if (error) {
         throw new ValidationError(error.message);
       }
+      const tags = JSON.parse(req.body.tags);
       let images = await uploadFile(req);
-      await Product.create({ ...req.body, images });
+      await Product.create({ ...req.body, images, tags });
       return;
     } catch (error) {
       throw error;
