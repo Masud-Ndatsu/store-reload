@@ -27,7 +27,7 @@ const getUser = async (req, res, next) => {
 
 const uploadUserAvatar = async (req, res, next) => {
   try {
-    await UserService.uploadUserAvatar(req);
+    await UserService.uploadUserAvatar(req, res.locals.user._id);
     return res.status(200).json({
       status: true,
       data,
