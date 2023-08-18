@@ -30,7 +30,7 @@ const uploadUserAvatar = async (req, res, next) => {
     await UserService.uploadUserAvatar(req, res.locals.user._id);
     return res.status(200).json({
       status: true,
-      data,
+      data: null,
       message: "Request successful",
     });
   } catch (error) {

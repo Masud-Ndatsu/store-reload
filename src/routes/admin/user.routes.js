@@ -6,7 +6,7 @@ const router = Router();
 
 router.get("/getMany", userCtrl.getAllUsers);
 router.get("/getOne", userCtrl.getUser);
-router.get("/avater", (req, res) => {
+router.get("/me", (req, res) => {
   const { avatar } = res.locals.user;
   return { data: avatar };
 });
