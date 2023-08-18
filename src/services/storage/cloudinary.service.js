@@ -42,5 +42,6 @@ export const uploadFile = async (req) => {
     return url;
   } catch (error) {
     console.log("IMAGE ERROR: ", error);
+    throw error;
   }
 };

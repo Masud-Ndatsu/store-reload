@@ -60,8 +60,6 @@ export default class AuthService {
 
       return {
         data: {
-          userId: existingUser._id,
-          avatar: existingUser.avatar,
           token,
         },
       };

@@ -24,8 +24,8 @@ class UserService {
 
     return { data: user };
   };
-  static uploadUserAvatar = async (req) => {
-    const { userId } = req.query;
+  static uploadUserAvatar = async (req, res) => {
+    const userId = res.locals.user._id;
     let images = await uploadFile(req);
     const avatar = images[0];
     await User.findByIdAndUpdate(userId, { avatar }, { new: true });
