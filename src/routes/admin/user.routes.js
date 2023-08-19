@@ -6,10 +6,11 @@ const router = Router();
 
 router.get("/getMany", userCtrl.getAllUsers);
 router.get("/getOne", userCtrl.getUser);
-router.get("/me", (req, res) => {
+router.get("/avatar", (req, res) => {
+  console.log(res.locals.user);
   const { avatar } = res.locals.user;
-  return { data: avatar };
+  return res.status(200).json({ data: avatar });
 });
-router.put("/avater", upload.array("avatar", 1), userCtrl.uploadUserAvatar);
+router.put("/avatar", upload.array("avatar", 1), userCtrl.uploadUserAvatar);
 
 export default router;

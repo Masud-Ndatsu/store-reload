@@ -13,9 +13,9 @@ const _upload = (file, folder) => {
     cloudinary.v2.uploader.upload(
       file,
       { resource_type: "auto", folder },
-      (err, result) => {
-        if (err) {
-          reject(err);
+      (error, result) => {
+        if (error) {
+          reject({ error });
         }
         resolve({ url: result.url, id: result.public_id });
       }

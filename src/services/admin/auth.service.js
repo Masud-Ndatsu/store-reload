@@ -47,7 +47,7 @@ export default class AuthService {
       const existingUser = await User.findOne({ email }).lean();
 
       if (!existingUser) {
-        throw new NotfoundError("shop name not found");
+        throw new NotfoundError("email not found");
       }
 
       const isValid = await verifyHash(password, existingUser.password);

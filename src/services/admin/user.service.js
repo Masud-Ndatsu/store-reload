@@ -24,12 +24,15 @@ class UserService {
 
     return { data: user };
   };
-  static uploadUserAvatar = async (req, res) => {
-    const userId = res.locals.user._id;
-    let images = await uploadFile(req);
-    const avatar = images[0];
-    await User.findByIdAndUpdate(userId, { avatar }, { new: true });
-    return;
+  static uploadUserAvatar = async (req, userId) => {
+    try {
+      let images = await uploadFile(req);
+      const avatar = images[0];
+      await User.findByIdAndUpdate(userId, { avatar }, { new: true });
+      return;
+    } catch (error) {
+      throw error;
+    }
   };
 }
 
