@@ -12,17 +12,12 @@ const app = express();
 // Connect DB
 connectDB();
 
-if (process.env.NODE_ENV === "dev") {
-  app.use(morgan("dev"));
-} else if (process.env.NODE_ENV === "prod") {
-  app.use(morgan("combined"));
-}
-
-app.set("trust proxy", 1);
-app.use(cors());
-app.use(compression());
 app.use(express.json({ limit: "10kb" })); // This would limit the body size to 10kb
 app.use(express.urlencoded({ extended: true, limit: "10kb" })); // This would limit the body size to 10kb
+app.use(cors());
+app.use(compression());
+app.set("trust proxy", 1);
+app.use(morgan(process.env.NODE_ENV === "prod" ? "combined" : "dev"));
 app.use(limiter);
 app.use("/api/v1/app/", appRoutes);
 app.use("/api/v1/admin/", adminRoutes);
