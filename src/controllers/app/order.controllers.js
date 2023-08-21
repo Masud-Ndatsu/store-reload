@@ -2,7 +2,7 @@ import OrderService from "../../services/app/order.service";
 
 const addToCart = async (req, res, next) => {
   try {
-    await OrderService.addToCart(req, res);
+    await OrderService.addToCart(req, res.locals.userId);
     return res.status(201).json({
       status: true,
       data: null,
@@ -26,7 +26,7 @@ const getUserCart = async (req, res, next) => {
 };
 const createOrder = async (req, res, next) => {
   try {
-    await OrderService.createOrder(req, res);
+    await OrderService.createOrder(req, res.locals.userId);
     return res.status(201).json({
       status: true,
       data: null,
@@ -88,7 +88,7 @@ const deleteOrder = async (req, res, next) => {
 };
 const clearOrderCart = async (req, res, next) => {
   try {
-    await OrderService.clearOrderCart(res);
+    await OrderService.clearOrderCart(res.locals.userId);
     return res.status(200).json({
       status: true,
       data: null,

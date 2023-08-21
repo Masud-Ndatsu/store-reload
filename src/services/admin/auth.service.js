@@ -99,7 +99,7 @@ export default class AuthService {
       throw error;
     }
   }
-  static async changePassword(req, res) {
+  static async changePassword(req) {
     try {
       const { token, userId } = req.body;
       const { error, value } = newPasswordSchema.validate(req.body);

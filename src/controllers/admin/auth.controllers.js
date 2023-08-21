@@ -38,7 +38,7 @@ const forgotPassword = async (req, res, next) => {
 };
 const changePassword = async (req, res, next) => {
   try {
-    await AuthService.changePassword(req, res);
+    await AuthService.changePassword(req);
     return res.status(200).json({
       status: true,
       data: null,

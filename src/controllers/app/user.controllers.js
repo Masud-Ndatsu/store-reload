@@ -2,7 +2,7 @@ import UserService from "../../services/app/user.service.js";
 
 const userProfileDetails = async (req, res, next) => {
   try {
-    const { data } = await UserService.getUserProfile(res);
+    const { data } = await UserService.getUserProfile(res.locals.userId);
     return res.status(200).json({
       status: true,
       data,
@@ -15,7 +15,7 @@ const userProfileDetails = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    await UserService.updateUserDetails(res.locals.user._id, { ...req.body });
+    await UserService.updateUserDetails(res.locals.userId, { ...req.body });
     return res.status(200).json({
       status: true,
       data: null,
@@ -40,7 +40,7 @@ const verifyUserEmail = async (req, res, next) => {
 };
 const logoutUser = async (req, res, next) => {
   try {
-    await UserService.logoutUser(req, res.locals.user);
+    await UserService.logoutUser(req, res.locals.userId);
     return res.status(200).json({
       status: true,
       data: null,

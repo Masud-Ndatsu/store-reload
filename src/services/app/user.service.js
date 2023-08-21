@@ -11,15 +11,15 @@ import { generateAndSendUserOTP } from "../../utils/auth.utils.js";
 import { User } from "../../models/user.model.js";
 
 class UserService {
-  static async getUserProfile(res) {
+  static async getUserProfile(userId) {
     try {
-      const user = res.locals.user;
+      const user = await User.findById(userId).select("-password").lean();
 
       if (!user) {
         throw new NotfoundError("user not found");
       }
       return {
-        data: { ...user, password: undefined },
+        data: user,
       };
     } catch (error) {
       throw error;
@@ -29,7 +29,7 @@ class UserService {
   static async getUser(req) {
     try {
       const userId = req.query.userId;
-      const user = await User.findById(userId);
+      const user = await User.findById(userId).lean();
       if (!user) {
         throw new NotfoundError("user not found");
       }

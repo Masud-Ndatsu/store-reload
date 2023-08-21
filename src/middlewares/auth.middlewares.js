@@ -12,11 +12,9 @@ export const handleAuth = async (req, res, next) => {
 
     const decoded = await decodeToken(authToken);
 
-    const user = await User.findById(decoded.id).lean();
+    if (!decoded.id) throw new AuthError("Unauthorized user");
 
-    if (!user) throw new AuthError("unauthorized user");
-
-    res.locals.user = user;
+    res.locals.userId = decoded.id;
     return next();
   } catch (error) {
     console.log("ERROR", error);

@@ -9,15 +9,13 @@ import {
 } from "../../utils/validators/app/order.validator";
 
 class OrderService {
-  static addToCart = async (req, res) => {
+  static addToCart = async (req, userId) => {
     const { error, value } = addToCartSchema.validate(req.body);
 
     if (error) {
       throw new ValidationError(error.message);
     }
     const { productId, quantity } = value;
-
-    const userId = res.locals.user._id;
 
     const product = await Product.findById(productId).lean();
 
@@ -33,12 +31,10 @@ class OrderService {
     return;
   };
 
-  static getUserCart = async (res) => {
-    const userId = res.locals.user._id;
-    const cartItems = await OrderItem.find({ userId }).populate(
-      "product",
-      "_id name image price"
-    );
+  static getUserCart = async (userId) => {
+    const cartItems = await OrderItem.find({ userId })
+      .populate("product", "_id name image price")
+      .lean();
     const cartItemsCount = await OrderItem.countDocuments({ userId });
 
     if (cartItemsCount === 0) {
@@ -53,7 +49,7 @@ class OrderService {
     return { data: { cartItems, cartItemIds, totalPrice } };
   };
 
-  static createOrder = async (req, res) => {
+  static createOrder = async (req, userId) => {
     const { error, value } = createOrderSchema.validate(req.body);
 
     if (error) {
@@ -61,8 +57,6 @@ class OrderService {
     }
 
     const { orderedItems, totalPrice, shippingAddress } = value;
-
-    const userId = res.locals.user._id;
 
     await Order.create({
       products: orderedItems,
@@ -138,9 +132,7 @@ class OrderService {
     return;
   };
 
-  static clearOrderCart = async (res) => {
-    const userId = res.locals.user._id;
-
+  static clearOrderCart = async (userId) => {
     const orderItemCount = await OrderItem.countDocuments({ userId });
 
     if (orderItemCount === 0) {
