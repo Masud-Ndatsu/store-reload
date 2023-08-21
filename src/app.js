@@ -15,7 +15,7 @@ connectDB();
 if (process.env.NODE_ENV === "dev") {
   app.use(morgan("dev"));
 } else if (process.env.NODE_ENV === "prod") {
-  app.use(morgan("common"));
+  app.use(morgan("combined"));
 }
 
 app.set("trust proxy", 1);
