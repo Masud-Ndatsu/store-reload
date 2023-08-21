@@ -67,13 +67,6 @@ const schema = new Schema(
   },
   {
     timestamps: true,
-    virtuals: {
-      fullName: {
-        get() {
-          return `${this.firstName} ${this.lastName}`;
-        },
-      },
-    },
   }
 );
 

@@ -9,9 +9,10 @@ import { handleAuth } from "../../middlewares/auth.middlewares.js";
 const routes = Router();
 
 routes.use("/auth", authRoutes);
-routes.use("/user", handleAuth, userRoutes);
-routes.use("/product", handleAuth, productRoutes);
-routes.use("/order", handleAuth, orderRoutes);
 routes.use("/payment", paymentRoutes);
+routes.use(handleAuth);
+routes.use("/user", userRoutes);
+routes.use("/product", productRoutes);
+routes.use("/order", orderRoutes);
 
 export default routes;

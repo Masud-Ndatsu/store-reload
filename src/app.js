@@ -18,7 +18,7 @@ if (process.env.NODE_ENV === "dev") {
   app.use(morgan("common"));
 }
 
-app.set("trust-proxy", true);
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: "10kb" })); // This would limit the body size to 10kb

@@ -1,11 +1,11 @@
-import env from 'dotenv/config';
+import env from "dotenv/config";
 
 const { MONGO_PROD_URI, MONGO_DEV_URI, MONGO_TEST_URI } = process.env;
 
 const MONGO_URI =
-  process.env.NODE_ENV === 'prod'
-    ? MONGO_PROD_URI.replace('<password>', process.env.MONGO_PROD_PASS)
-    : process.env.NODE_ENV === 'dev'
+  process.env.NODE_ENV === "prod"
+    ? MONGO_PROD_URI.replace("<password>", process.env.MONGO_PROD_PASS)
+    : process.env.NODE_ENV === "dev"
     ? MONGO_DEV_URI
     : MONGO_TEST_URI;
 const config = {
