@@ -25,6 +25,21 @@ const getUser = async (req, res, next) => {
   }
 };
 
+const getAvatar = async (req, res, next) => {
+  try {
+    const userId = res.locals.userId;
+
+    const { data } = await UserService.getAvatar(userId);
+    return res.status(200).json({
+      status: true,
+      data,
+      message: "Request successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const uploadUserAvatar = async (req, res, next) => {
   try {
     await UserService.uploadUserAvatar(req, res.locals.userId);
@@ -41,5 +56,6 @@ const uploadUserAvatar = async (req, res, next) => {
 export default {
   getAllUsers,
   getUser,
+  getAvatar,
   uploadUserAvatar,
 };

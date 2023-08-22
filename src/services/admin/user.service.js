@@ -24,15 +24,15 @@ class UserService {
 
     return { data: user };
   };
+  static getAvatar = async (userId) => {
+    const user = await User.findById(userId).select("avatar").lean();
+    return { data: user.avatar };
+  };
   static uploadUserAvatar = async (req, userId) => {
-    try {
-      let images = await uploadFile(req);
-      const avatar = images[0];
-      await User.findByIdAndUpdate(userId, { avatar }, { new: true });
-      return;
-    } catch (error) {
-      throw error;
-    }
+    let images = await uploadFile(req);
+    const avatar = images[0];
+    await User.findByIdAndUpdate(userId, { avatar }, { new: true });
+    return;
   };
 }
 
