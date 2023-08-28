@@ -46,7 +46,9 @@ class UserService {
       if (error) {
         throw new ValidationError(error.message);
       }
-      const user = await User.findById(userId);
+      const user = await User.findById(userId)
+        .select("_id isEmailVerified")
+        .lean();
 
       if (!user) throw new NotfoundError("user not found");
 
@@ -71,9 +73,8 @@ class UserService {
       if (error) {
         throw new ValidationError(error.message);
       }
-
       const { code } = value;
-      const user = await User.findOne({ code });
+      const user = await User.findOne({ code }).select("_id").lean();
       if (!user) throw new NotfoundError("user not found");
       await User.findOneAndUpdate(user._id, { isEmailVerified: true });
       return;

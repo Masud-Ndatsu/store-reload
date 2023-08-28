@@ -85,7 +85,7 @@ class ProductService {
       if (error) {
         throw new Error(error.message);
       }
-      const product = await Product.findById(productId).lean();
+      const product = await Product.findById(productId).select("_id").lean();
       if (!product) {
         throw new NotfoundError("product not found");
       }
@@ -98,7 +98,7 @@ class ProductService {
   static deleteProduct = async (req) => {
     try {
       const { productId } = req.query;
-      const product = await Product.findById(productId).lean();
+      const product = await Product.findById(productId).select("_id").lean();
       if (!product) {
         throw new NotfoundError("product not found");
       }

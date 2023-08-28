@@ -29,7 +29,9 @@ class AuthService {
       }
       const { shopName, password } = value || userReq;
 
-      const existingUser = await User.findOne({ shopName }).lean();
+      const existingUser = await User.findOne({ shopName })
+        .select("_id")
+        .lean();
 
       if (existingUser) {
         throw new ServiceError("shop name already exists");
@@ -92,7 +94,7 @@ class AuthService {
       }
       const { email } = value;
 
-      const user = await User.findOne({ email }).lean();
+      const user = await User.findOne({ email }).select("_id email").lean();
       if (!user) {
         throw new NotfoundError("user not  found");
       }
@@ -114,7 +116,7 @@ class AuthService {
       }
       const { code } = value;
 
-      const user = await User.findOne({ code }).lean();
+      const user = await User.findOne({ code }).select("_id").lean();
 
       if (!user) {
         throw new NotfoundError("user not  found");
@@ -134,7 +136,7 @@ class AuthService {
       if (error) {
         throw new ValidationError(error.message);
       }
-      const user = await User.findById(userID).lean();
+      const user = await User.findById(userID).select("_id").lean();
 
       if (!user) {
         throw new NotfoundError("user not found");

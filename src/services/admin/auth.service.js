@@ -19,7 +19,9 @@ export default class AuthService {
       if (error) {
         throw new ValidationError(error.message);
       }
-      const existingUser = await User.findOne({ email: value.email }).lean();
+      const existingUser = await User.findOne({ email: value.email })
+        .select("_id email")
+        .lean();
       if (existingUser) {
         throw new ServiceError(`user already exists with email ${value.email}`);
       }
@@ -44,7 +46,9 @@ export default class AuthService {
       }
       const { email, password } = value || userReq;
 
-      const existingUser = await User.findOne({ email }).lean();
+      const existingUser = await User.findOne({ email })
+        .select("_id password")
+        .lean();
 
       if (!existingUser) {
         throw new NotfoundError("email not found");
@@ -76,7 +80,7 @@ export default class AuthService {
       }
       const { email } = value;
 
-      const user = await User.findOne({ email }).lean();
+      const user = await User.findOne({ email }).select("_id email").lean();
 
       if (!user) {
         throw new NotfoundError("user not  found");
@@ -109,7 +113,7 @@ export default class AuthService {
       }
       const { password } = value;
 
-      const user = await User.findById(userId).lean();
+      const user = await User.findById(userId).select("resetToken").lean();
       if (!user || user.resetToken !== token) {
         throw new NotfoundError("user not  found");
       }

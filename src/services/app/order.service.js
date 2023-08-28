@@ -17,7 +17,7 @@ class OrderService {
     }
     const { productId, quantity } = value;
 
-    const product = await Product.findById(productId).lean();
+    const product = await Product.findById(productId).select("_id").lean();
 
     if (!product) {
       throw new NotfoundError("Product not found");
@@ -33,9 +33,11 @@ class OrderService {
 
   static getUserCart = async (userId) => {
     const cartItems = await OrderItem.find({ userId })
-      .populate("product", "_id name image price")
+      .populate("product", "_id name images price")
       .lean();
-    const cartItemsCount = await OrderItem.countDocuments({ userId });
+    const cartItemsCount = await OrderItem.countDocuments({ userId })
+      .select("_id")
+      .lean();
 
     if (cartItemsCount === 0) {
       throw new NotfoundError("Cart is empty");
@@ -87,7 +89,7 @@ class OrderService {
     const limit = req.query.limit ? Number(req.query.limit) : 5;
 
     const skipDocuments = (page - 1) * limit;
-    const totalDocuments = await Order.countDocuments({});
+    const totalDocuments = await Order.countDocuments({}).select("_id").lean();
     const totalPages = Math.ceil(totalDocuments / limit);
 
     const orders = await Order.find({})
@@ -107,7 +109,7 @@ class OrderService {
 
     const { orderId } = value;
 
-    const order = await Order.findById(orderId).lean();
+    const order = await Order.findById(orderId).select("_id").lean();
 
     if (!order) {
       throw new NotfoundError("Order not found");
@@ -123,7 +125,7 @@ class OrderService {
 
     const { orderId } = value;
 
-    const order = await Order.findById(orderId).lean();
+    const order = await Order.findById(orderId).select("_id").lean();
 
     if (!order) {
       throw new NotfoundError("Order not found");
@@ -133,7 +135,9 @@ class OrderService {
   };
 
   static clearOrderCart = async (userId) => {
-    const orderItemCount = await OrderItem.countDocuments({ userId });
+    const orderItemCount = await OrderItem.countDocuments({ userId })
+      .select("_id")
+      .lean();
 
     if (orderItemCount === 0) {
       throw new NotfoundError("your cart is empty");

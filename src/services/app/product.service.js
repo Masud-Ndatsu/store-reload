@@ -24,10 +24,13 @@ class ProductService {
       const limit = req.query.limit ? Number(req.query.limit) : 5;
 
       const skipDocuments = (page - 1) * limit;
-      const totalDocuments = await Product.countDocuments({ type });
+      const totalDocuments = await Product.countDocuments({ type })
+        .select("_id")
+        .lean();
       const totalPages = Math.ceil(totalDocuments / limit);
 
-      // if (!type) throw new NotfoundError("product type is required");
+      if (!type) throw new NotfoundError("product type is required");
+
       const products = await Product.find({ type })
         .limit(limit)
         .skip(skipDocuments)
@@ -63,7 +66,9 @@ class ProductService {
       const limit = req.query.limit ? Number(req.query.limit) : 5;
 
       const skipDocuments = (page - 1) * limit;
-      const totalDocuments = await Product.countDocuments({});
+      const totalDocuments = await Product.countDocuments({})
+        .select("_id")
+        .lean();
       const totalPages = Math.ceil(totalDocuments / limit);
 
       const { searchText } = req.query;
@@ -96,7 +101,9 @@ class ProductService {
       const limit = req.query.limit ? Number(req.query.limit) : 5;
       const { category } = req.query;
       const skipDocuments = (page - 1) * limit;
-      const totalDocuments = await Product.countDocuments({ category });
+      const totalDocuments = await Product.countDocuments({ category })
+        .select("_id")
+        .lean();
       const totalPages = Math.ceil(totalDocuments / limit);
       if (!category) throw new NotfoundError("category is required");
 
