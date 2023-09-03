@@ -58,19 +58,44 @@ class ProductService {
 
       if (!searchText) throw new NotfoundError("searchText is required");
 
-      const products = await Product.find({
-        $or: [
-          {
-            name: { $regex: searchText, $options: "i" },
+      const products = await Product.aggregate([
+        {
+          $lookup: {
+            from: "categories", // Replace with the name of your Category collection
+            localField: "category",
+            foreignField: "_id",
+            as: "category",
           },
-          {
-            category: { $regex: searchText, $options: "i" },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
           },
-        ],
-      })
-        .limit(limit)
-        .skip(skipDocuments)
-        .lean();
+        },
+        {
+          $group: {
+            _id: "$_id",
+            name: { $first: "$name" },
+            category: { $first: "$category.name" },
+            price: { $first: "$price" },
+            images: { $first: "$images" },
+            // Add other fields as needed
+          },
+        },
+        {
+          $match: {
+            $or: [
+              {
+                name: { $regex: searchText, $options: "i" },
+              },
+              {
+                category: { $regex: searchText, $options: "i" },
+              },
+            ],
+          },
+        },
+      ]);
 
       return { data: { products, totalPages } };
     } catch (error) {
