@@ -6,14 +6,14 @@ const schema = new Schema(
   {
     name: {
       type: String,
-      index: true,
     },
     description: {
       type: String,
     },
     category: {
-      type: String,
-      index: true,
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "categories",
     },
     type: {
       type: String,
@@ -35,6 +35,7 @@ const schema = new Schema(
   }
 );
 
-schema.index({ name: "text", category: "text", description: "text" });
+schema.index({ name: "text", description: "text" }, { unique: true });
 
 export const Product = model("products", schema);
+Product.syncIndexes();

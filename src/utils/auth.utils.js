@@ -1,32 +1,27 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-const { sign, verify } = jwt;
-import { promisify } from "util";
+import { hash, compare } from "bcrypt";
+import { sign, verify } from "jsonwebtoken";
 import sendMail from "../services/email/nodemailer";
 const { SALT, SIGNATURE } = process.env;
 
 export const createHash = async (sentData) => {
-  const data = await bcrypt.hash(sentData, Number(SALT));
+  const data = await hash(sentData, Number(SALT));
   return data;
 };
 
 export const verifyHash = async (sentData, accurateData) => {
-  const bool = await bcrypt.compare(sentData, accurateData);
+  const bool = await compare(sentData, accurateData);
   return bool;
 };
 
-const _signJWT = promisify(sign);
-const _verifyJWT = promisify(verify);
-
 export const generateToken = async (payload, expirationTime = "60d") => {
-  const token = await _signJWT(payload, SIGNATURE, {
+  const token = await sign(payload, SIGNATURE, {
     expiresIn: expirationTime,
   });
   return token;
 };
 
 export const decodeToken = async (token) => {
-  const payload = await _verifyJWT(token, SIGNATURE);
+  const payload = await verify(token, SIGNATURE);
   return payload;
 };
 

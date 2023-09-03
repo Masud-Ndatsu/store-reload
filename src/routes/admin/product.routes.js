@@ -2,7 +2,7 @@ import { Router } from "express";
 import productControllers from "../../controllers/admin/product.controllers";
 import { upload } from "../../utils/api.utils";
 
-const router = new Router();
+const router = Router();
 router.post(
   "/create",
   upload.array("image", 4),
