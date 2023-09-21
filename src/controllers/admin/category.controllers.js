@@ -2,9 +2,8 @@ import { CategoryService } from "../../services/admin/category.service";
 
 export const createCategory = async (req, res, next) => {
   try {
-    const category = req.body;
-    await CategoryService.createCategory(category);
-    return res.status(200).json({
+    await CategoryService.createCategory(req.body);
+    return res.status(201).json({
       status: true,
       data: null,
       message: "Request successful",

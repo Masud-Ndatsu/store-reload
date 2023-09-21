@@ -17,5 +17,5 @@ export const editProductSchema = Joi.object({
   image: Joi.object().optional(),
   type: Joi.string().trim(),
   price: Joi.string().optional(),
-  tags: Joi.string().required().trim(),
+  tags: Joi.string().trim(),
 });

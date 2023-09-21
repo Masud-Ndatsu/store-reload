@@ -4,9 +4,9 @@ const { Schema, model } = mongoose;
 
 const schema = new Schema(
   {
-    transactionId: {
+    userId: {
       type: Schema.Types.ObjectId,
-      ref: "transactions",
+      ref: "users",
     },
     amount: {
       type: Number,
