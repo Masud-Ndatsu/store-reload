@@ -8,43 +8,59 @@ import {
     newPasswordSchema,
 } from "../../utils/validators/admin/auth.validator";
 
-import sendMail from "../email/nodemailer";
-import { User } from "../../models/user.model";
+import { sendMail } from "../email/nodemailer";
+import { Admin } from "../../models/admin.model";
 
 export default class AuthService {
     static createUser = async (req) => {
         try {
-            const userReq = req.body;
-            const { error, value } = createUserSchema.validate(userReq);
+            const { email, password } = req.body;
+
+            const { error, value } = createUserSchema.validate(req.body);
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const existingUser = await User.findOne({ email: value.email }).select("_id email").lean();
+
+            const [existingUser] = await Admin.aggregate([
+                {
+                    $match: {
+                        $expr: { $eq: [{ $toString: "$email" }, email] },
+                    },
+                },
+            ]);
+
             if (existingUser) {
-                throw new ServiceError(`user already exists with email ${value.email}`);
+                throw new ServiceError(`user already exists with email ${email}`);
             }
-            const hashedPassword = await createHash(value.password);
-            await User.create({
+
+            const hashpwd = await createHash(password);
+
+            const newAdmin = await Admin.create({
                 ...value,
-                role: "admin",
-                password: hashedPassword,
+                password: hashpwd,
             });
-            return;
+
+            return newAdmin;
         } catch (error) {
             throw error;
         }
     };
     static loginUser = async (req) => {
         try {
-            const userReq = req.body;
-            const { error, value } = loginUserSchema.validate(userReq);
+            const { email, password } = req.body;
+            const { error } = loginUserSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { email, password } = value || userReq;
 
-            const existingUser = await User.findOne({ email }).select("_id password").lean();
+            const [existingUser] = await Admin.aggregate([
+                {
+                    $match: {
+                        $expr: { $eq: [{ $toString: "$email" }, email] },
+                    },
+                },
+            ]);
 
             if (!existingUser) {
                 throw new NotfoundError("email not found");
@@ -56,27 +72,31 @@ export default class AuthService {
                 throw new ServiceError("Incorrect password");
             }
 
-            const token = await generateToken({ id: existingUser._id });
-
-            return {
-                data: {
-                    token,
-                },
-            };
+            const token = await generateToken(
+                { id: existingUser._id },
+                process.env.ADMIN_SIGNATURE
+            );
+            return { data: { token } };
         } catch (error) {
             throw error;
         }
     };
     static async forgotPassword(req) {
         try {
-            const { error, value } = forgotPasswordEmailSchema.validate(req.body);
+            const { email } = req.body;
+            const { error } = forgotPasswordEmailSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { email } = value;
 
-            const user = await User.findOne({ email }).select("_id email").lean();
+            const [user] = await Admin.aggregate([
+                {
+                    $match: {
+                        $expr: { $eq: [{ $toString: "$email" }, email] },
+                    },
+                },
+            ]);
 
             if (!user) {
                 throw new NotfoundError("user not  found");
@@ -85,7 +105,13 @@ export default class AuthService {
 
             let resetToken = crypto.randomBytes(32).toString("hex");
 
-            await User.findByIdAndUpdate(user._id, { resetToken });
+            const updateUser = await Admin.updateOne(
+                { _id: user._id },
+                {
+                    resetToken,
+                },
+                { new: true }
+            );
 
             const url = `${ADMIN_CLIENT_URL}/auth/change-password?token=${resetToken}&id=${user._id}`;
 
@@ -94,27 +120,32 @@ export default class AuthService {
                 subject: "Change Password",
                 message: `<p>Heh! User. This is your user to change password ${url}</p>`,
             });
-            return;
+            return updateUser;
         } catch (error) {
             throw error;
         }
     }
     static async changePassword(req) {
         try {
-            const { token, userId } = req.body;
+            const { token, userId, password } = req.body;
             const { error, value } = newPasswordSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { password } = value;
 
-            const user = await User.findById(userId).select("resetToken").lean();
+            const [user] = await Admin.aggregate([
+                {
+                    $match: {
+                        $expr: { $eq: [{ $toString: "$_id" }, userid] },
+                    },
+                },
+            ]);
             if (!user || user.resetToken !== token) {
                 throw new NotfoundError("user not  found");
             }
-            const hashedPassword = await createHash(password);
-            await User.findByIdAndUpdate(userId, { password: hashedPassword });
+            const hashpwd = await createHash(password);
+            await Admin.updateOne({ _id: userId }, { password: hashpwd }, { new: true });
             return;
         } catch (error) {
             throw error;

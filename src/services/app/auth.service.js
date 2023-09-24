@@ -1,6 +1,6 @@
 import { NotfoundError, ServiceError, ValidationError } from "../../errors/index.js";
-import { User } from "../../models/user.model.js";
-import { createHash, generateAndSendUserOTP, generateToken, verifyHash } from "../../utils/auth.utils.js";
+import { ShopModel } from "../../models/shop.model.js";
+import { createHash, genAuthCode, generateToken, verifyHash } from "../../utils/auth.utils.js";
 import {
     createUserSchema,
     loginSchema,
@@ -8,64 +8,69 @@ import {
     resetPasswordOTPSchema,
     resetPasswordSchema,
 } from "../../utils/validators/app/auth.validator.js";
+import sendMail from "../email/nodemailer.js";
 
 class AuthService {
     static async createUser(req) {
         try {
-            const userReq = req.body;
-            const { error, value } = createUserSchema.validate(userReq);
+            const { shopName, password } = req.body;
+            const { error, value } = createUserSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { shopName, password } = value || userReq;
 
-            const existingUser = await User.findOne({ shopName }).select("_id").lean();
+            const existingShop = await ShopModel.findOne({ shopName }).lean();
 
-            if (existingUser) {
+            if (existingShop) {
                 throw new ServiceError("shop name already exists");
             }
-            const hashedPassword = await createHash(password);
+            const hashpwd = await createHash(password);
 
-            await User.create({
+            const shop = await ShopModel.create({
                 ...value,
-                password: hashedPassword,
+                password: hashpwd,
             });
 
-            return;
+            return shop;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }
 
     static async loginUser(req) {
         try {
-            const userReq = req.body;
-            const { error, value } = loginSchema.validate(userReq);
+            const { shopName, password } = req.body;
+
+            const { error } = loginSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { shopName, password } = value || userReq;
 
-            const existingUser = await User.findOne({ shopName }).lean();
-
-            if (!existingUser) {
+            const [existingShop] = await ShopModel.aggregate([
+                {
+                    $match: {
+                        $expr: { $eq: [{ $toString: "$shopName" }, shopName] },
+                    },
+                },
+            ]);
+            console.log(existingShop);
+            if (!existingShop) {
                 throw new NotfoundError("shop name not found");
             }
 
-            const isValid = await verifyHash(password, existingUser.password);
+            const isValid = await verifyHash(password, existingShop.password);
 
             if (!isValid) {
                 throw new ServiceError("Incorrect password");
             }
 
-            const token = await generateToken({ id: existingUser._id });
+            const token = await generateToken({ id: existingShop._id }, process.env.APP_SIGNATURE);
 
             return {
                 data: {
-                    user: existingUser,
+                    user: existingShop,
                     token,
                 },
             };
@@ -76,20 +81,35 @@ class AuthService {
 
     static async resetPasswordEmail(req) {
         try {
-            const { error, value } = resetPasswordEmailSchema.validate(req.body);
+            const { email } = req.body;
+
+            const { error } = resetPasswordEmailSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { email } = value;
 
-            const user = await User.findOne({ email }).select("_id email").lean();
-            if (!user) {
-                throw new NotfoundError("user not  found");
+            const shop = await ShopModel.findOne({ email }).lean();
+
+            if (!shop) {
+                throw new NotfoundError("shop not  found");
             }
 
-            const otp = await generateAndSendUserOTP(email);
-            await User.findByIdAndUpdate(user._id, { emailVerificationCode: otp });
+            const code = genAuthCode();
+
+            await sendMail({
+                email: email,
+                subject: "Reset Password",
+                message: `<p>Heh! User. This is your reset password code ${code}</p>`,
+            });
+
+            await ShopModel.findOneAndUpdate(
+                { _id: shop._id },
+                {
+                    authCode: code,
+                },
+                { new: true }
+            );
 
             return;
         } catch (error) {
@@ -98,20 +118,21 @@ class AuthService {
     }
     static async resetPasswordOTP(req) {
         try {
-            const { error, value } = resetPasswordOTPSchema.validate(req.body);
+            const { code } = req.body;
+
+            const { error } = resetPasswordOTPSchema.validate(req.body);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const { code } = value;
 
-            const user = await User.findOne({ code }).select("_id").lean();
+            const shop = await ShopModel.findOne({ code }).lean();
 
-            if (!user) {
-                throw new NotfoundError("user not  found");
+            if (!shop) {
+                throw new NotfoundError("shop not  found");
             }
 
-            return { data: user };
+            return { data: shop };
         } catch (error) {
             throw error;
         }
@@ -122,18 +143,24 @@ class AuthService {
             const { error, value } = resetPasswordSchema.validate(req.body);
 
             const { userID, password } = value;
+
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const user = await User.findById(userID).select("_id").lean();
+            const user = await ShopModel.findById(userID).select("_id").lean();
 
             if (!user) {
-                throw new NotfoundError("user not found");
+                throw new NotfoundError("shop not found");
             }
-            const hashedPassword = await createHash(password);
-            await User.findByIdAndUpdate(user._id, {
-                password: hashedPassword,
-            });
+            const hashpwd = await createHash(password);
+
+            await ShopModel.findOneAndUpdate(
+                { _id: user._id },
+                {
+                    password: hashpwd,
+                },
+                { new: true }
+            );
 
             return;
         } catch (error) {

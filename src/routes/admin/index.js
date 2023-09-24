@@ -5,14 +5,14 @@ import userRoutes from "./user.routes.js";
 import productRoutes from "./product.routes.js";
 import categoryRoutes from "./category.routes.js";
 
-import { handleAuth } from "../../middlewares/auth.middlewares.js";
+import { authAdminUser } from "../../middlewares/_admin/authmiddleware.js";
 
 const routes = Router();
 
 routes.use("/auth", authRoutes);
-routes.use(handleAuth);
-routes.use("/user", userRoutes);
-routes.use("/product", productRoutes);
+routes.use(authAdminUser);
+routes.use("/users", userRoutes);
+routes.use("/products", productRoutes);
 routes.use("/category", categoryRoutes);
 
 export default routes;

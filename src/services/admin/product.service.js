@@ -11,8 +11,15 @@ class ProductService {
                 throw new ValidationError(error.message);
             }
             const tags = JSON.parse(req.body.tags);
+
             const price = Number(req.body.price);
-            let images = await uploadFile(req);
+
+            let images;
+
+            if (req.files) {
+                images = await uploadFile(req);
+            }
+
             await Product.create({ ...req.body, images, tags, price });
             return;
         } catch (error) {
@@ -45,6 +52,7 @@ class ProductService {
             const limit = req.query.limit ? Number(req.query.limit) : 5;
 
             const skipDocuments = (page - 1) * limit;
+
             const totalDocuments = await Product.countDocuments({});
             const totalPages = Math.ceil(totalDocuments / limit);
 

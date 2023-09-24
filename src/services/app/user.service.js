@@ -1,18 +1,41 @@
 import { NotfoundError, ServiceError, ValidationError } from "../../errors/index.js";
-import { updateUserSchema, verifyUserEmailSchema } from "../../utils/validators/app/user.validator.js";
-import { generateAndSendUserOTP } from "../../utils/auth.utils.js";
+import {
+    updateUserSchema,
+    verifyUserEmailSchema,
+} from "../../utils/validators/app/user.validator.js";
+import { sendMail } from "../email/nodemailer";
+import { genAuthCode, generateToken } from "../../utils/auth.utils.js";
 import { User } from "../../models/user.model.js";
+import { ShopModel } from "../../models/shop.model.js";
 
 class UserService {
     static async getUserProfile(userId) {
         try {
-            const user = await User.findById(userId).select("-password").lean();
-
+            const [user] = await User.aggregate([
+                { $match: { $expr: { $eq: [{ $toString: "$shop" }, userId.toString()] } } },
+                {
+                    $lookup: {
+                        from: "shops",
+                        localField: "shop",
+                        foreignField: "_id",
+                        as: "shop",
+                    },
+                },
+                {
+                    $project: {
+                        "shop.password": 0,
+                        "shop.updatedAt": 0,
+                        "shop.createdAt": 0,
+                        updatedAt: 0,
+                        createdAt: 0,
+                    },
+                },
+            ]);
             if (!user) {
                 throw new NotfoundError("user not found");
             }
             return {
-                data: user,
+                data: { ...user, shop: user.shop[0] },
             };
         } catch (error) {
             throw error;
@@ -32,57 +55,85 @@ class UserService {
         }
     }
 
-    static async updateUserDetails(userId, updateReq) {
+    static async updateUserDetails(shopId, data = {}) {
         try {
-            let emailVerificationCode;
-            const { error, value } = updateUserSchema.validate(updateReq);
+            const { error, value } = updateUserSchema.validate(data);
             if (error) {
                 throw new ValidationError(error.message);
             }
-            const user = await User.findById(userId).select("_id isEmailVerified").lean();
+            const user = await User.findOneAndUpdate(
+                { shop: shopId },
+                { shop: shopId },
+                { upsert: true }
+            ).lean();
 
-            if (!user) throw new NotfoundError("user not found");
-
-            if (value.email && user.isEmailVerified) {
-                await User.findByIdAndUpdate(user._id, { isEmailVerified: false });
+            if (data.email && user.verified) {
+                await User.findOneAndUpdate(
+                    { _id: user._id },
+                    {
+                        verified: false,
+                    },
+                    {
+                        new: true,
+                    }
+                );
             }
 
-            if (value.email && !user.isEmailVerified) {
-                emailVerificationCode = await generateAndSendUserOTP(value.email);
+            let authCode;
+
+            if (value.email && !user.verified) {
+                authCode = genAuthCode();
+                await Promise.all([
+                    ShopModel.updateOne({ _id: shopId }, { authCode }, { new: true }),
+                    sendMail({
+                        email: value.email,
+                        subject: "Verify User Credentials",
+                        message: `<p>Heh! User. This is your OTP to very user credentials ${authCode}</p>`,
+                    }),
+                ]);
             }
 
-            await User.findByIdAndUpdate(userId, { ...value, emailVerificationCode });
-            return;
+            const updatedUser = await User.findByIdAndUpdate(
+                user._id,
+                {
+                    ...value,
+                },
+                { new: true }
+            );
+
+            return updatedUser;
         } catch (error) {
             throw error;
         }
     }
-    static async verifyUserEmail(userReq) {
+    static async verifyCustomerData(userReq) {
         try {
             const { error, value } = verifyUserEmailSchema.validate(userReq);
 
             if (error) {
                 throw new ValidationError(error.message);
             }
+
             const { code } = value;
-            const user = await User.findOne({ code }).select("_id").lean();
-            if (!user) throw new NotfoundError("user not found");
-            await User.findOneAndUpdate(user._id, { isEmailVerified: true });
+
+            const user = await ShopModel.findOne({ authCode: code }).select("_id").lean();
+
+            if (!user) {
+                throw new NotfoundError("user not found");
+            }
+
+            await User.findOneAndUpdate({ shop: user._id }, { verified: true }, { new: true });
+            console.log({ owner });
+
             return;
         } catch (error) {
             throw error;
         }
     }
-    static async logoutUser(req, user) {
+    static async logoutUser(user) {
         try {
-            const token = req.headers.authorization.split(" ")[1];
-            const tokens = user.tokens;
-            if (!token) {
-                throw new ServiceError("auth token required");
-            }
-            const newTokens = tokens.filter((t) => t.token !== token);
-            await User.findByIdAndUpdate(user._id, { tokens: newTokens });
-            return;
+            const token = await generateToken({ id: user._id }, process.env.APP_SIGNATURE, 1);
+            return { data: { user, token } };
         } catch (error) {
             throw error;
         }

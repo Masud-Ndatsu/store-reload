@@ -1,13 +1,30 @@
-import { NotfoundError } from "../../errors/index.js";
+import { NotfoundError, ValidationError } from "../../errors/index.js";
 import { Product } from "../../models/product.model.js";
 import { getProductSchema } from "../../utils/validators/app/product.validator.js";
 
 class ProductService {
     static getProduct = async (req) => {
         try {
-            const { productId } = getProductSchema.validate(req.query);
+            const { productId } = req.query;
 
-            const product = await Product.findById(productId).lean();
+            const [product] = await Product.aggregate([
+                {
+                    $match: {
+                        $expr: {
+                            $eq: [{ $toString: "$_id" }, productId],
+                        },
+                    },
+                },
+                {
+                    $project: {
+                        name: 1,
+                        images: 1,
+                        description: 1,
+                        price: 1,
+                    },
+                },
+            ]);
+
             if (!product) {
                 throw new NotfoundError("product not found");
             }
@@ -23,29 +40,39 @@ class ProductService {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-            const skipDocuments = (page - 1) * limit;
-            const totalDocuments = await Product.countDocuments({ type }).select("_id").lean();
-            const totalPages = Math.ceil(totalDocuments / limit);
+            if (!type) throw new ValidationError("product type is required");
 
-            if (!type) throw new NotfoundError("product type is required");
-
-            const products = await Product.find({ type }).limit(limit).skip(skipDocuments).lean();
+            const products = await Product.aggregate([
+                {
+                    $match: { $expr: { $eq: [{ $toString: "$type" }, type] } },
+                },
+                {
+                    $project: {
+                        name: 1,
+                        images: 1,
+                        price: 1,
+                    },
+                },
+                {
+                    $skip: (page - 1) * limit,
+                },
+                {
+                    $limit: limit,
+                },
+            ]);
 
             const categories = [...new Set(products.map((product) => product.category))];
 
-            const data = products.map((data, idx) => {
+            const data = products.map((_data, index) => {
                 return {
-                    category: categories[idx],
-                    href: `/product/getByCategory?category=${categories[idx]}`,
-                    data: products.filter((product) => product.category === categories[idx]),
+                    category: categories[index],
+                    href: `/product/getByCategory?category=${categories[index]}`,
+                    data: products.filter((product) => product.category === categories[index]),
                 };
             });
+            const filteredProducts = data.filter((product) => product.category !== undefined);
 
-            const transformed = data.filter((product) => {
-                return product.category !== undefined;
-            });
-
-            return { data: { products: transformed, totalPages } };
+            return { data: filteredProducts };
         } catch (error) {
             throw error;
         }
@@ -56,29 +83,47 @@ class ProductService {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-            const skipDocuments = (page - 1) * limit;
-            const totalDocuments = await Product.countDocuments({}).select("_id").lean();
-            const totalPages = Math.ceil(totalDocuments / limit);
-
             const { searchText } = req.query;
 
-            if (!searchText) throw new NotfoundError("searchText is required");
+            if (!searchText) throw new ValidationError("searchText is required");
 
-            const products = await Product.find({
-                $or: [
-                    {
-                        name: { $regex: searchText, $options: "i" },
+            const products = await Product.aggregate([
+                {
+                    $lookup: {
+                        from: "categories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "category",
                     },
-                    {
-                        category: { $regex: searchText, $options: "i" },
+                },
+                {
+                    $match: {
+                        $or: [
+                            {
+                                name: { $regex: new RegExp(searchText, "i") },
+                            },
+                            {
+                                "category.name": { $regex: new RegExp(searchText, "i") },
+                            },
+                        ],
                     },
-                ],
-            })
-                .limit(limit)
-                .skip(skipDocuments)
-                .lean();
+                },
+                {
+                    $project: {
+                        name: 1,
+                        images: 1,
+                        price: 1,
+                    },
+                },
+                {
+                    $skip: (page - 1) * limit,
+                },
+                {
+                    $limit: limit,
+                },
+            ]);
 
-            return { data: { products, totalPages } };
+            return { data: products };
         } catch (error) {
             throw error;
         }
@@ -88,13 +133,14 @@ class ProductService {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 5;
+
             const { category } = req.query;
-            const skipDocuments = (page - 1) * limit;
+
             const totalDocuments = await Product.countDocuments({ category }).select("_id").lean();
             const totalPages = Math.ceil(totalDocuments / limit);
             if (!category) throw new NotfoundError("category is required");
 
-            const products = await Product.find({ category }).limit(limit).skip(skipDocuments).lean();
+            const products = await Product.aggregate({ category }).limit(limit).lean();
 
             return { data: { products, totalPages } };
         } catch (error) {

@@ -19,4 +19,5 @@ const schema = new Schema(
 schema.index({ name: 1 }, { unique: true });
 
 export const Category = model("categories", schema);
+
 Category.syncIndexes();

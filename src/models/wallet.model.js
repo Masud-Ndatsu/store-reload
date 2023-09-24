@@ -4,21 +4,20 @@ const { Schema, model } = mongoose;
 
 const schema = new Schema(
     {
-        product: {
-            type: Schema.Types.ObjectId,
-            ref: "products",
-            required: true,
-            autopopulate: true,
-        },
-        quantity: {
-            type: Number,
-            required: true,
-        },
-        userId: {
+        owner: {
             type: Schema.Types.ObjectId,
             ref: "users",
             required: true,
             autopopulate: true,
+        },
+        balance: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        isBlocked: {
+            type: Boolean,
+            default: false,
         },
     },
     {
@@ -26,4 +25,4 @@ const schema = new Schema(
     }
 );
 
-export const OrderItem = model("orderItems", schema);
+export const Wallet = model("wallets", schema);

@@ -7,13 +7,23 @@ const schema = new Schema(
         userId: {
             type: Schema.Types.ObjectId,
             ref: "users",
+            required: true,
+            autopopulate: true,
         },
         amount: {
             type: Number,
         },
-        paymentId: {
-            type: Schema.Types.ObjectId,
-            ref: "payments",
+        provider: {
+            type: String,
+        },
+        type: {
+            type: String,
+            enum: ["deposit", "withdrawal", "transfer"],
+        },
+        status: {
+            type: String,
+            enum: ["successful", "pending", "failed"],
+            default: "pending",
         },
     },
     {

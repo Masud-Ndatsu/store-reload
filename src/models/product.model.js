@@ -6,9 +6,11 @@ const schema = new Schema(
     {
         name: {
             type: String,
+            required: true,
         },
         description: {
             type: String,
+            required: true,
         },
         category: {
             type: Schema.Types.ObjectId,
@@ -18,6 +20,7 @@ const schema = new Schema(
         type: {
             type: String,
             enum: ["general", "medical"],
+            default: "general",
         },
         images: {
             type: [String],
@@ -25,9 +28,47 @@ const schema = new Schema(
         price: {
             type: Number,
             default: 0,
+            min: 0,
         },
         tags: {
             type: [String],
+        },
+        inventory: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        manufacturer: {
+            type: String,
+        },
+        ratings: {
+            type: [
+                {
+                    userId: Schema.Types.ObjectId,
+                    rating: {
+                        type: Number,
+                        min: 1,
+                        max: 5,
+                    },
+                    review: String,
+                },
+            ],
+        },
+        featured: {
+            type: Boolean,
+            default: false,
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+        reviews: {
+            type: [
+                {
+                    userId: Schema.Types.ObjectId,
+                    review: String,
+                },
+            ],
         },
     },
     {

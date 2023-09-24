@@ -4,15 +4,15 @@ import userRoutes from "./user.routes.js";
 import authRoutes from "./auth.routes.js";
 import orderRoutes from "./order.routes.js";
 import paymentRoutes from "./payment.routes.js";
-import { handleAuth } from "../../middlewares/auth.middlewares.js";
+import { authUser } from "../../middlewares/_app/auth.middlewares.js";
 
 const routes = Router();
 
 routes.use("/auth", authRoutes);
 routes.use("/payment", paymentRoutes);
-routes.use(handleAuth);
-routes.use("/user", userRoutes);
-routes.use("/product", productRoutes);
-routes.use("/order", orderRoutes);
+routes.use(authUser);
+routes.use("/users", userRoutes);
+routes.use("/products", productRoutes);
+routes.use("/orders", orderRoutes);
 
 export default routes;

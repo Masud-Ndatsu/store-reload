@@ -1,59 +1,62 @@
 import UserService from "../../services/app/user.service.js";
 
 const userProfileDetails = async (req, res, next) => {
-  try {
-    const { data } = await UserService.getUserProfile(res.locals.userId);
-    return res.status(200).json({
-      status: true,
-      data,
-      message: "Request successful",
-    });
-  } catch (error) {
-    next(error);
-  }
+    try {
+        const userId = res.locals.user._id;
+        const { data } = await UserService.getUserProfile(userId);
+        return res.status(200).json({
+            status: true,
+            data,
+            message: "Request successful",
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 const updateUser = async (req, res, next) => {
-  try {
-    await UserService.updateUserDetails(res.locals.userId, { ...req.body });
-    return res.status(200).json({
-      status: true,
-      data: null,
-      message: "Request successful",
-    });
-  } catch (error) {
-    next(error);
-  }
+    try {
+        const userId = res.locals.user._id;
+        await UserService.updateUserDetails(userId, { ...req.body });
+        return res.status(200).json({
+            status: true,
+            data: null,
+            message: "Request successful",
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
-const verifyUserEmail = async (req, res, next) => {
-  try {
-    await UserService.verifyUserEmail({ ...req.body });
-    return res.status(200).json({
-      status: true,
-      data: null,
-      message: "Request successful",
-    });
-  } catch (error) {
-    next(error);
-  }
+const verifyCustomerData = async (req, res, next) => {
+    try {
+        await UserService.verifyCustomerData({ ...req.body });
+        return res.status(200).json({
+            status: true,
+            data: null,
+            message: "Request successful",
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 const logoutUser = async (req, res, next) => {
-  try {
-    await UserService.logoutUser(req, res.locals.userId);
-    return res.status(200).json({
-      status: true,
-      data: null,
-      message: "Request successful",
-    });
-  } catch (error) {
-    next(error);
-  }
+    try {
+        const user = res.locals.user;
+        const { data } = await UserService.logoutUser(user);
+        return res.status(200).json({
+            status: true,
+            data,
+            message: "Request successful",
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 export default {
-  updateUser,
-  verifyUserEmail,
-  userProfileDetails,
-  logoutUser,
+    updateUser,
+    verifyCustomerData,
+    userProfileDetails,
+    logoutUser,
 };
