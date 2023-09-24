@@ -1,4 +1,5 @@
 import { NotfoundError, ValidationError } from "../../errors/index.js";
+import { Category } from "../../models/category.model.js";
 import { Product } from "../../models/product.model.js";
 import { getProductSchema } from "../../utils/validators/app/product.validator.js";
 
@@ -44,6 +45,14 @@ class ProductService {
 
             const products = await Product.aggregate([
                 {
+                    $lookup: {
+                        from: "categories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "category",
+                    },
+                },
+                {
                     $match: { $expr: { $eq: [{ $toString: "$type" }, type] } },
                 },
                 {
@@ -51,6 +60,7 @@ class ProductService {
                         name: 1,
                         images: 1,
                         price: 1,
+                        category: 1,
                     },
                 },
                 {
@@ -61,16 +71,18 @@ class ProductService {
                 },
             ]);
 
-            const categories = [...new Set(products.map((product) => product.category))];
+            // Get All Categories
+            const catArr = await Category.find({});
 
-            const data = products.map((_data, index) => {
-                return {
-                    category: categories[index],
-                    href: `/product/getByCategory?category=${categories[index]}`,
-                    data: products.filter((product) => product.category === categories[index]),
-                };
-            });
-            const filteredProducts = data.filter((product) => product.category !== undefined);
+            const categories = [...new Set(catArr.map((category) => category.name))];
+
+            const data = products.map((_data, index) => ({
+                category: categories[index],
+                href: `/product/getByCategory?category=${categories[index]}`,
+                data: products.filter((product) => product.category[0]?.name === categories[index]),
+            }));
+
+            const filteredProducts = data.filter((product) => product.category.name !== undefined);
 
             return { data: filteredProducts };
         } catch (error) {
@@ -136,13 +148,38 @@ class ProductService {
 
             const { category } = req.query;
 
-            const totalDocuments = await Product.countDocuments({ category }).select("_id").lean();
-            const totalPages = Math.ceil(totalDocuments / limit);
-            if (!category) throw new NotfoundError("category is required");
+            if (!category) throw new ValidationError("category is required");
 
-            const products = await Product.aggregate({ category }).limit(limit).lean();
+            const products = await Product.aggregate([
+                {
+                    $lookup: {
+                        from: "categories",
+                        localField: "category",
+                        foreignField: "_id",
+                        as: "category",
+                    },
+                },
+                {
+                    $match: {
+                        $expr: { $eq: ["$category", category] },
+                    },
+                },
+                {
+                    $project: {
+                        name: 1,
+                        images: 1,
+                        price: 1,
+                    },
+                },
+                {
+                    $skip: (page - 1) * limit,
+                },
+                {
+                    $limit: limit,
+                },
+            ]);
 
-            return { data: { products, totalPages } };
+            return { data: products };
         } catch (error) {
             throw error;
         }
