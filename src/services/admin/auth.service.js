@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { NotfoundError, ServiceError, ValidationError } from "../../errors";
+import { AppError } from "../../errors";
 import { createHash, generateToken, verifyHash } from "../../utils/auth.utils";
 import {
     createUserSchema,
@@ -18,7 +18,7 @@ export default class AuthService {
 
             const { error, value } = createUserSchema.validate(req.body);
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const [existingUser] = await Admin.aggregate([
@@ -30,7 +30,7 @@ export default class AuthService {
             ]);
 
             if (existingUser) {
-                throw new ServiceError(`user already exists with email ${email}`);
+                throw new AppError(`user already exists with email ${email}`, 400);
             }
 
             const hashpwd = await createHash(password);
@@ -51,7 +51,7 @@ export default class AuthService {
             const { error } = loginUserSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const [existingUser] = await Admin.aggregate([
@@ -63,13 +63,13 @@ export default class AuthService {
             ]);
 
             if (!existingUser) {
-                throw new NotfoundError("email not found");
+                throw new AppError("email not found", 404);
             }
 
             const isValid = await verifyHash(password, existingUser.password);
 
             if (!isValid) {
-                throw new ServiceError("Incorrect password");
+                throw new AppError("Incorrect password", 400);
             }
 
             const token = await generateToken(
@@ -87,7 +87,7 @@ export default class AuthService {
             const { error } = forgotPasswordEmailSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const [user] = await Admin.aggregate([
@@ -99,7 +99,7 @@ export default class AuthService {
             ]);
 
             if (!user) {
-                throw new NotfoundError("user not  found");
+                throw new AppError("user not  found", 404);
             }
             const { ADMIN_CLIENT_URL } = process.env;
 
@@ -131,7 +131,7 @@ export default class AuthService {
             const { error, value } = newPasswordSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const [user] = await Admin.aggregate([
@@ -142,7 +142,7 @@ export default class AuthService {
                 },
             ]);
             if (!user || user.resetToken !== token) {
-                throw new NotfoundError("user not  found");
+                throw new AppError("user not  found", 404);
             }
             const hashpwd = await createHash(password);
             await Admin.updateOne({ _id: userId }, { password: hashpwd }, { new: true });

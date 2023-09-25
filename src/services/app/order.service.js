@@ -1,4 +1,4 @@
-import { NotfoundError, ValidationError } from "../../errors";
+import { AppError } from "../../errors";
 import { OrderItem } from "../../models/order-item";
 import { Order } from "../../models/order.model";
 import { Product } from "../../models/product.model";
@@ -13,14 +13,14 @@ class OrderService {
         const { error } = addToCartSchema.validate(req.body);
 
         if (error) {
-            throw new ValidationError(error.message);
+            throw new AppError(error.message, 400);
         }
         const { productId, quantity } = req.body;
 
         const product = await Product.findById(productId).select("_id").lean();
 
         if (!product) {
-            throw new NotfoundError("Product not found");
+            throw new AppError("Product not found", 404);
         }
 
         await OrderItem.create({
@@ -36,7 +36,7 @@ class OrderService {
         const item = await OrderItem.findOne({ _id: itemId, userId }).lean();
 
         if (!item) {
-            throw new NotfoundError("Item not found");
+            throw new AppError("Item not found", 404);
         }
         const cartItem = await OrderItem.findOneAndUpdate(
             { _id: itemId, userId },
@@ -75,7 +75,7 @@ class OrderService {
         ]);
 
         if (cartItems.length === 0) {
-            throw new NotfoundError("Cart is empty");
+            throw new AppError("Cart is empty", 404);
         }
 
         const cartItemIds = cartItems.map((cartItem) => cartItem._id);
@@ -92,7 +92,7 @@ class OrderService {
         const { error, value } = createOrderSchema.validate(req.body);
 
         if (error) {
-            throw new ValidationError(error.message);
+            throw new AppError(error.message, 400);
         }
 
         const { orderedItems, totalPrice, shippingAddress } = value;
@@ -111,18 +111,19 @@ class OrderService {
         const { error } = getOrderSchema.validate(req.query);
 
         if (error) {
-            throw new ValidationError(error.message);
+            throw new AppError(error.message, 400);
         }
 
         const order = await Order.findById(orderId).lean();
+
         if (!order) {
-            throw new NotfoundError("Order not found");
+            throw new AppError("Order not found", 404);
         }
 
         return { data: order };
     };
 
-    static getOrdersPlaced = async (req) => {
+    static getOrdersPlaced = async (req, userId) => {
         const page = req.query.page ? Number(req.query.page) : 1;
         const limit = req.query.limit ? Number(req.query.limit) : 5;
 
@@ -141,40 +142,22 @@ class OrderService {
                     localField: "userId",
                     foreignField: "_id",
                     as: "user",
-                },
-            },
-            {
-                $match: {},
-            },
-            {
-                $project: {
-                    shippingAddress: 1,
-                    dateOrdered: 1,
-                    products: 1,
-                    user: {
-                        $cond: {
-                            if: { $isArray: "$user" },
-                            then: {
-                                $arrayElemAt: [
-                                    {
-                                        $map: {
-                                            input: "$user",
-                                            as: "user",
-                                            in: {
-                                                _id: "$$user._id",
-                                                name: "$$user.shopName",
-                                            },
-                                        },
-                                    },
-                                    0,
-                                ],
+                    pipeline: [
+                        {
+                            $project: {
+                                password: 0,
+                                createdAt: 0,
+                                updatedAt: 0,
                             },
-                            else: "$user",
                         },
-                    },
+                    ],
                 },
             },
-
+            {
+                $match: {
+                    userId,
+                },
+            },
             {
                 $skip: (page - 1) * limit,
             },
@@ -187,45 +170,59 @@ class OrderService {
     };
 
     static editOrder = async (req) => {
-        const orderReq = req.body;
         const { error, value } = getOrderSchema.validate(req.query);
-        if (error) throw new ValidationError(error.message);
+
+        if (error) {
+            throw new AppError(error.message, 400);
+        }
 
         const { orderId } = value;
 
-        const order = await Order.findById(orderId).select("_id").lean();
+        const order = await Order.findOne({ _id: orderId }).select("_id").lean();
 
         if (!order) {
-            throw new NotfoundError("Order not found");
+            throw new AppError("Order not found", 404);
         }
 
-        await Order.findByIdAndUpdate(orderId, { ...orderReq }, { new: true });
-        return;
+        const updatedOrder = await Order.findOneAndUpdate(
+            { _id: orderId },
+            { ...req.body },
+            { new: true }
+        );
+        return updatedOrder;
     };
 
     static deleteOrder = async (req) => {
         const { error, value } = getOrderSchema.validate(req.query);
-        if (error) throw new ValidationError(error.message);
+        if (error) {
+            throw new AppError(error.message, 400);
+        }
 
         const { orderId } = value;
 
         const order = await Order.findById(orderId).select("_id").lean();
 
         if (!order) {
-            throw new NotfoundError("Order not found");
+            throw new AppError("Order not found", 404);
         }
         await Order.findByIdAndDelete(orderId);
         return;
     };
 
-    static clearOrderCart = async (userId) => {
-        const orderItemCount = await OrderItem.countDocuments({ userId }).select("_id").lean();
+    static clearCartItems = async (userId) => {
+        const orderItems = await OrderItem.aggregate([
+            {
+                $match: {
+                    userId,
+                },
+            },
+        ]);
 
-        if (orderItemCount === 0) {
-            throw new NotfoundError("your cart is empty");
+        if (orderItems.length === 0) {
+            throw new AppError("your cart is empty", 404);
         }
-        await OrderItem.deleteMany({ userId });
-        return;
+        const items = await OrderItem.deleteMany({ userId });
+        return items;
     };
 }
 

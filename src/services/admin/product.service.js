@@ -1,6 +1,9 @@
-import { NotfoundError, ValidationError } from "../../errors";
+import { AppError } from "../../errors";
 import { Product } from "../../models/product.model";
-import { createProductSchema, editProductSchema } from "../../utils/validators/admin/product.validator";
+import {
+    createProductSchema,
+    editProductSchema,
+} from "../../utils/validators/admin/product.validator";
 import { uploadFile } from "../storage/cloudinary.service";
 
 class ProductService {
@@ -8,7 +11,7 @@ class ProductService {
         try {
             const { error } = createProductSchema.validate(req.body);
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message);
             }
             const tags = JSON.parse(req.body.tags);
 
@@ -32,15 +35,17 @@ class ProductService {
 
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 5;
-            const skipDocuments = (page - 1) * limit;
-            const totalDocuments = await Product.countDocuments({ type });
-            const totalPages = Math.ceil(totalDocuments / limit);
 
-            if (!type) throw new ValidationError("type is required");
+            if (!type) {
+                throw new AppError("type is required", 400);
+            }
 
-            const products = await Product.find({ type }).limit(limit).skip(skipDocuments).lean();
+            const products = await Product.find({ type })
+                .limit(limit)
+                .skip((page - 1) * limit)
+                .lean();
 
-            return { data: { products, totalPages } };
+            return { data: products };
         } catch (error) {
             throw error;
         }
@@ -51,14 +56,11 @@ class ProductService {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-            const skipDocuments = (page - 1) * limit;
-
-            const totalDocuments = await Product.countDocuments({});
-            const totalPages = Math.ceil(totalDocuments / limit);
-
             const { searchText } = req.query;
 
-            if (!searchText) throw new NotfoundError("searchText is required");
+            if (!searchText) {
+                throw new AppError("searchText is required", 400);
+            }
 
             const products = await Product.aggregate([
                 {
@@ -97,9 +99,15 @@ class ProductService {
                         ],
                     },
                 },
+                {
+                    $skip: (page - 1) * limit,
+                },
+                {
+                    $limit: limit,
+                },
             ]);
 
-            return { data: { products, totalPages } };
+            return { data: products };
         } catch (error) {
             throw error;
         }
@@ -110,11 +118,11 @@ class ProductService {
             const productReq = req.body;
             const { error, value } = editProductSchema.validate(productReq);
             if (error) {
-                throw new Error(error.message);
+                throw new AppError(error.message, 400);
             }
             const product = await Product.findById(productId).select("_id").lean();
             if (!product) {
-                throw new NotfoundError("product not found");
+                throw new AppError("product not found", 404);
             }
             await Product.findByIdAndUpdate(productId, { ...value }, { new: true });
             return;
@@ -127,7 +135,7 @@ class ProductService {
             const { productId } = req.query;
             const product = await Product.findById(productId).select("_id").lean();
             if (!product) {
-                throw new NotfoundError("product not found");
+                throw new AppError("product not found", 404);
             }
             await Product.findByIdAndDelete(productId);
             return;

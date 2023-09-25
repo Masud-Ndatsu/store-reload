@@ -67,7 +67,8 @@ const getOrder = async (req, res, next) => {
 };
 const getOrdersPlaced = async (req, res, next) => {
     try {
-        const { data } = await OrderService.getOrdersPlaced(req);
+        const userId = res.locals.user._id;
+        const { data } = await OrderService.getOrdersPlaced(req, userId);
         return res.status(200).json({
             status: true,
             data,

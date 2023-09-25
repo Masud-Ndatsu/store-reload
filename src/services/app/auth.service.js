@@ -1,4 +1,4 @@
-import { NotfoundError, ServiceError, ValidationError } from "../../errors/index.js";
+import { AppError } from "../../errors/index.js";
 import { ShopModel } from "../../models/shop.model.js";
 import { createHash, genAuthCode, generateToken, verifyHash } from "../../utils/auth.utils.js";
 import {
@@ -17,13 +17,13 @@ class AuthService {
             const { error, value } = createUserSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const existingShop = await ShopModel.findOne({ shopName }).lean();
 
             if (existingShop) {
-                throw new ServiceError("shop name already exists");
+                throw new AppError("shop name already exists", 400);
             }
             const hashpwd = await createHash(password);
 
@@ -45,7 +45,7 @@ class AuthService {
             const { error } = loginSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const [existingShop] = await ShopModel.aggregate([
@@ -55,15 +55,14 @@ class AuthService {
                     },
                 },
             ]);
-            console.log(existingShop);
             if (!existingShop) {
-                throw new NotfoundError("shop name not found");
+                throw new AppError("shop name not found", 404);
             }
 
             const isValid = await verifyHash(password, existingShop.password);
 
             if (!isValid) {
-                throw new ServiceError("Incorrect password");
+                throw new AppError("Incorrect password", 400);
             }
 
             const token = await generateToken({ id: existingShop._id }, process.env.APP_SIGNATURE);
@@ -86,13 +85,13 @@ class AuthService {
             const { error } = resetPasswordEmailSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const shop = await ShopModel.findOne({ email }).lean();
 
             if (!shop) {
-                throw new NotfoundError("shop not  found");
+                throw new AppError("shop not  found", 404);
             }
 
             const code = genAuthCode();
@@ -123,13 +122,13 @@ class AuthService {
             const { error } = resetPasswordOTPSchema.validate(req.body);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const shop = await ShopModel.findOne({ code }).lean();
 
             if (!shop) {
-                throw new NotfoundError("shop not  found");
+                throw new AppError("shop not  found", 404);
             }
 
             return { data: shop };
@@ -145,12 +144,12 @@ class AuthService {
             const { userID, password } = value;
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
             const user = await ShopModel.findById(userID).select("_id").lean();
 
             if (!user) {
-                throw new NotfoundError("shop not found");
+                throw new AppError("shop not found", 404);
             }
             const hashpwd = await createHash(password);
 

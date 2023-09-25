@@ -1,4 +1,4 @@
-import { ServiceError } from "../../errors";
+import { AppError } from "../../errors";
 import { Category } from "../../models/category.model";
 
 export class CategoryService {
@@ -7,8 +7,9 @@ export class CategoryService {
 
         const category = await Category.findOne({ name }).select("_id").lean();
 
-        if (category) throw new ServiceError("Category already exists");
-
+        if (category) {
+            throw new AppError("Category already exists", 400);
+        }
         await Category.create({ ...categoryReq });
         return;
     };

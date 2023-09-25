@@ -1,4 +1,4 @@
-import { NotfoundError, ValidationError } from "../../errors/index.js";
+import { AppError, ValidationError } from "../../errors/index.js";
 import { Category } from "../../models/category.model.js";
 import { Product } from "../../models/product.model.js";
 import { getProductSchema } from "../../utils/validators/app/product.validator.js";
@@ -28,7 +28,7 @@ class ProductService {
             ]);
 
             if (!product) {
-                throw new NotfoundError("product not found");
+                throw new AppError("product not found", 404);
             }
             return { data: product };
         } catch (error) {
@@ -44,7 +44,9 @@ class ProductService {
             const page = req.query.page ? Number(req.query.page) : 1;
             const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-            if (!type) throw new ValidationError("product type is required");
+            if (!type) {
+                throw new AppError("product type is required", 400);
+            }
 
             const products = await Product.aggregate([
                 {
@@ -101,7 +103,9 @@ class ProductService {
 
             const { searchText } = req.query;
 
-            if (!searchText) throw new ValidationError("searchText is required");
+            if (!searchText) {
+                throw new AppError("searchText is required", 400);
+            }
 
             const products = await Product.aggregate([
                 {
@@ -153,7 +157,9 @@ class ProductService {
 
             const { category } = req.query;
 
-            if (!category) throw new ValidationError("category is required");
+            if (!category) {
+                throw new AppError("category is required", 400);
+            }
 
             const products = await Product.aggregate([
                 {

@@ -1,4 +1,4 @@
-import { NotfoundError, ServiceError, ValidationError } from "../../errors/index.js";
+import { AppError } from "../../errors/index.js";
 import {
     updateUserSchema,
     verifyUserEmailSchema,
@@ -38,11 +38,9 @@ class UserService {
                 },
             ]);
             if (!user) {
-                throw new NotfoundError("user not found");
+                throw new AppError("user not found", 404);
             }
-            return {
-                data: { ...user, shop: user.shop[0] },
-            };
+            return { data: { ...user, shop: user.shop[0] } };
         } catch (error) {
             throw error;
         }
@@ -53,7 +51,7 @@ class UserService {
             const userId = req.query.userId;
             const user = await User.findById(userId).lean();
             if (!user) {
-                throw new NotfoundError("user not found");
+                throw new AppError("user not found", 404);
             }
             return { data: user };
         } catch (error) {
@@ -65,7 +63,7 @@ class UserService {
         try {
             const { error, value } = updateUserSchema.validate(data);
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message);
             }
             const user = await User.findOneAndUpdate(
                 { shop: shopId },
@@ -117,7 +115,7 @@ class UserService {
             const { error, value } = verifyUserEmailSchema.validate(userReq);
 
             if (error) {
-                throw new ValidationError(error.message);
+                throw new AppError(error.message, 400);
             }
 
             const { code } = value;
@@ -125,11 +123,10 @@ class UserService {
             const user = await ShopModel.findOne({ authCode: code }).select("_id").lean();
 
             if (!user) {
-                throw new NotfoundError("user not found");
+                throw new AppError("user not found", 404);
             }
 
             await User.findOneAndUpdate({ shop: user._id }, { verified: true }, { new: true });
-            console.log({ owner });
 
             return;
         } catch (error) {
