@@ -2,16 +2,20 @@ import { NotfoundError, ValidationError } from "../../errors";
 import { OrderItem } from "../../models/order-item";
 import { Order } from "../../models/order.model";
 import { Product } from "../../models/product.model";
-import { createOrderSchema, addToCartSchema, getOrderSchema } from "../../utils/validators/app/order.validator";
+import {
+    createOrderSchema,
+    addToCartSchema,
+    getOrderSchema,
+} from "../../utils/validators/app/order.validator";
 
 class OrderService {
-    static addToCart = async (req, userId) => {
-        const { error, value } = addToCartSchema.validate(req.body);
+    static addItemCart = async (req, userId) => {
+        const { error } = addToCartSchema.validate(req.body);
 
         if (error) {
             throw new ValidationError(error.message);
         }
-        const { productId, quantity } = value;
+        const { productId, quantity } = req.body;
 
         const product = await Product.findById(productId).select("_id").lean();
 
@@ -20,25 +24,66 @@ class OrderService {
         }
 
         await OrderItem.create({
-            product: productId,
+            productId,
             quantity,
             userId,
         });
         return;
     };
 
-    static getUserCart = async (userId) => {
-        const cartItems = await OrderItem.find({ userId }).populate("product", "_id name images price").lean();
-        const cartItemsCount = await OrderItem.countDocuments({ userId }).select("_id").lean();
+    static updateCartItem = async (req, userId) => {
+        const { itemId, quantity } = req.body;
+        const item = await OrderItem.findOne({ _id: itemId, userId }).lean();
 
-        if (cartItemsCount === 0) {
+        if (!item) {
+            throw new NotfoundError("Item not found");
+        }
+        const cartItem = await OrderItem.findOneAndUpdate(
+            { _id: itemId, userId },
+            { quantity },
+            { new: true }
+        );
+
+        return cartItem;
+    };
+
+    static getUserCartItems = async (userId) => {
+        const cartItems = await OrderItem.aggregate([
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "productId",
+                    foreignField: "_id",
+                    as: "product",
+                },
+            },
+            {
+                $match: {
+                    $expr: {
+                        $eq: [{ $toString: "$userId" }, userId.toString()],
+                    },
+                },
+            },
+
+            {
+                $project: {
+                    _id: 1,
+                    quantity: 1,
+                    product: { $arrayElemAt: ["$product", 0] },
+                },
+            },
+        ]);
+
+        if (cartItems.length === 0) {
             throw new NotfoundError("Cart is empty");
         }
+
         const cartItemIds = cartItems.map((cartItem) => cartItem._id);
 
-        const totalPrice = cartItems.reduce((prev, cartItem) => {
-            return prev + cartItem.product.price * cartItem.quantity;
-        }, 0);
+        const totalPrice = cartItems.reduce(
+            (prev, item) => prev + item.product.price * item.quantity,
+            0
+        );
 
         return { data: { cartItems, cartItemIds, totalPrice } };
     };
@@ -60,6 +105,7 @@ class OrderService {
         });
         return;
     };
+
     static getOrder = async (req) => {
         const { orderId } = req.query;
         const { error } = getOrderSchema.validate(req.query);
@@ -80,18 +126,64 @@ class OrderService {
         const page = req.query.page ? Number(req.query.page) : 1;
         const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-        const skipDocuments = (page - 1) * limit;
-        const totalDocuments = await Order.countDocuments({}).select("_id").lean();
-        const totalPages = Math.ceil(totalDocuments / limit);
+        const orders = await Order.aggregate([
+            {
+                $lookup: {
+                    from: "orderitems",
+                    localField: "products",
+                    foreignField: "_id",
+                    as: "products",
+                },
+            },
+            {
+                $lookup: {
+                    from: "shops",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user",
+                },
+            },
+            {
+                $match: {},
+            },
+            {
+                $project: {
+                    shippingAddress: 1,
+                    dateOrdered: 1,
+                    products: 1,
+                    user: {
+                        $cond: {
+                            if: { $isArray: "$user" },
+                            then: {
+                                $arrayElemAt: [
+                                    {
+                                        $map: {
+                                            input: "$user",
+                                            as: "user",
+                                            in: {
+                                                _id: "$$user._id",
+                                                name: "$$user.shopName",
+                                            },
+                                        },
+                                    },
+                                    0,
+                                ],
+                            },
+                            else: "$user",
+                        },
+                    },
+                },
+            },
 
-        const orders = await Order.find({})
-            .limit(limit)
-            .skip(skipDocuments)
-            .populate("products")
-            .populate("products.product")
-            .populate("userId", "_id email")
-            .lean();
-        return { data: { orders, totalPages } };
+            {
+                $skip: (page - 1) * limit,
+            },
+            {
+                $limit: limit,
+            },
+        ]);
+
+        return { data: orders };
     };
 
     static editOrder = async (req) => {

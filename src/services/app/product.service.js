@@ -4,6 +4,7 @@ import { Product } from "../../models/product.model.js";
 import { getProductSchema } from "../../utils/validators/app/product.validator.js";
 
 class ProductService {
+    // Get Product By ProductID
     static getProduct = async (req) => {
         try {
             const { productId } = req.query;
@@ -34,6 +35,8 @@ class ProductService {
             throw error;
         }
     };
+
+    // Get Product By Product Type
     static getProducts = async (req) => {
         try {
             const { type } = req.query;
@@ -71,8 +74,8 @@ class ProductService {
                 },
             ]);
 
-            // Get All Categories
-            const catArr = await Category.find({});
+            // Get All Categories By Product Type
+            const catArr = await Category.find({ productType: type });
 
             const categories = [...new Set(catArr.map((category) => category.name))];
 
@@ -90,6 +93,7 @@ class ProductService {
         }
     };
 
+    // Get Products By searchText
     static getProductBySearchText = async (req) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;
@@ -141,6 +145,7 @@ class ProductService {
         }
     };
 
+    // Get Products By Product Category
     static getProductsByCategory = async (req) => {
         try {
             const page = req.query.page ? Number(req.query.page) : 1;

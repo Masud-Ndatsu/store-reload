@@ -12,7 +12,13 @@ class UserService {
     static async getUserProfile(userId) {
         try {
             const [user] = await User.aggregate([
-                { $match: { $expr: { $eq: [{ $toString: "$shop" }, userId.toString()] } } },
+                {
+                    $match: {
+                        $expr: {
+                            $eq: [{ $toString: "$shop" }, userId.toString()],
+                        },
+                    },
+                },
                 {
                     $lookup: {
                         from: "shops",

@@ -4,11 +4,10 @@ const { Schema, model } = mongoose;
 
 const schema = new Schema(
     {
-        product: {
+        productId: {
             type: Schema.Types.ObjectId,
             ref: "products",
             required: true,
-            autopopulate: true,
         },
         quantity: {
             type: Number,
@@ -18,7 +17,6 @@ const schema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "users",
             required: true,
-            autopopulate: true,
         },
     },
     {
