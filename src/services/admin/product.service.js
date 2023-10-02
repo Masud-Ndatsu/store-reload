@@ -1,9 +1,6 @@
 import { AppError } from "../../errors";
 import { Product } from "../../models/product.model";
-import {
-    createProductSchema,
-    editProductSchema,
-} from "../../utils/validators/admin/product.validator";
+import { createProductSchema, editProductSchema } from "../../utils/validators/admin/product.validator";
 import { uploadFile } from "../storage/cloudinary.service";
 
 class ProductService {
@@ -114,7 +111,7 @@ class ProductService {
     };
     static editProduct = async (req) => {
         try {
-            const { productId } = req.query;
+            const { productId } = req.params;
             const productReq = req.body;
             const { error, value } = editProductSchema.validate(productReq);
             if (error) {
@@ -132,7 +129,7 @@ class ProductService {
     };
     static deleteProduct = async (req) => {
         try {
-            const { productId } = req.query;
+            const { productId } = req.params;
             const product = await Product.findById(productId).select("_id").lean();
             if (!product) {
                 throw new AppError("product not found", 404);

@@ -21,6 +21,7 @@ app.use(morgan(process.env.NODE_ENV === "prod" ? "combined" : "dev"));
 app.use(limiter);
 app.use("/api/v1/app/", appRoutes);
 app.use("/api/v1/admin/", adminRoutes);
+
 app.use(handleError);
 app.use(handle404);
 

@@ -4,33 +4,19 @@ import { uploadFile } from "../storage/cloudinary.service";
 
 class UserService {
     static getAllUsers = async (req) => {
-        const page = req.query.page ? Number(req.query.page) : 0;
-
+        const page = req.query.page ? Number(req.query.page) : 1;
         const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-        const users = await User.aggregate([
-            {
-                $match: {
-                    $expr: { $eq: [{ $toString: "$userType" }, "user"] },
-                },
-            },
-            {
-                $project: {
-                    password: 0,
-                },
-            },
-            {
-                $skip: (page - 1) * limit,
-            },
-            {
-                $limit: limit,
-            },
-        ]);
+        const users = await User.find({ userType: "user" })
+            .populate("shop")
+            .skip((page - 1) * limit)
+            .limit(limit);
 
         return { data: users };
     };
+
     static getCustomerData = async (req) => {
-        const { userId } = req.query;
+        const { userId } = req.params;
 
         const [user] = await User.aggregate([
             { $match: { $expr: { $eq: [{ $toString: "$_id" }, userId] } } },
@@ -43,6 +29,7 @@ class UserService {
 
         return { data: user };
     };
+
     static getAvatar = async (userId) => {
         const [user] = await Admin.aggregate([
             { $match: { $expr: { $eq: [{ $toString: "$_id" }, userId] } } },

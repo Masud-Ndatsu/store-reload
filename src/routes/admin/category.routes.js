@@ -4,6 +4,6 @@ import { createCategory, getCategories } from "../../controllers/admin/category.
 const router = Router();
 
 router.post("/create", createCategory);
-router.get("/getMany", getCategories);
+router.get("/", getCategories);
 
 export default router;

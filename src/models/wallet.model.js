@@ -15,6 +15,9 @@ const schema = new Schema(
             default: 0,
             min: 0,
         },
+        accountNumber: {
+            type: String,
+        },
         isBlocked: {
             type: Boolean,
             default: false,

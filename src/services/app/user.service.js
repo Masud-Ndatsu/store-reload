@@ -1,8 +1,5 @@
 import { AppError } from "../../errors/index.js";
-import {
-    updateUserSchema,
-    verifyUserEmailSchema,
-} from "../../utils/validators/app/user.validator.js";
+import { updateUserSchema, verifyUserEmailSchema } from "../../utils/validators/app/user.validator.js";
 import { sendMail } from "../email/nodemailer";
 import { genAuthCode, generateToken } from "../../utils/auth.utils.js";
 import { User } from "../../models/user.model.js";
@@ -48,7 +45,7 @@ class UserService {
 
     static async getUser(req) {
         try {
-            const userId = req.query.userId;
+            const userId = req.params.userId;
             const user = await User.findById(userId).lean();
             if (!user) {
                 throw new AppError("user not found", 404);
@@ -65,11 +62,7 @@ class UserService {
             if (error) {
                 throw new AppError(error.message);
             }
-            const user = await User.findOneAndUpdate(
-                { shop: shopId },
-                { shop: shopId },
-                { upsert: true }
-            ).lean();
+            const user = await User.findOneAndUpdate({ shop: shopId }, { shop: shopId }, { upsert: true }).lean();
 
             if (data.email && user.verified) {
                 await User.findOneAndUpdate(

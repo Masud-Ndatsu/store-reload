@@ -72,10 +72,7 @@ export default class AuthService {
                 throw new AppError("Incorrect password", 400);
             }
 
-            const token = await generateToken(
-                { id: existingUser._id },
-                process.env.ADMIN_SIGNATURE
-            );
+            const token = await generateToken({ id: existingUser._id }, process.env.ADMIN_SIGNATURE);
             return { data: { token } };
         } catch (error) {
             throw error;
@@ -137,7 +134,7 @@ export default class AuthService {
             const [user] = await Admin.aggregate([
                 {
                     $match: {
-                        $expr: { $eq: [{ $toString: "$_id" }, userid] },
+                        $expr: { $eq: [{ $toString: "$_id" }, userId] },
                     },
                 },
             ]);

@@ -1,4 +1,4 @@
-import { AuthError } from "../../errors/index.js";
+import { AppError } from "../../errors/index.js";
 import { Admin } from "../../models/admin.model.js";
 import { decodeToken } from "../../utils/auth.utils.js";
 
@@ -7,7 +7,7 @@ export const authAdminUser = async (req, res, next) => {
         let token = req.header("Authorization");
 
         if (!token) {
-            throw new AuthError("token is required");
+            throw new AppError("token is required", 400);
         }
         const [, authToken] = req.header("Authorization").split(" ");
 
@@ -16,7 +16,7 @@ export const authAdminUser = async (req, res, next) => {
         const user = await Admin.findById(decoded.id).lean();
 
         if (!user) {
-            throw new AuthError("Unauthorized user");
+            throw new AppError("Unauthorized user", 401);
         }
         res.locals.user = user;
         return next();

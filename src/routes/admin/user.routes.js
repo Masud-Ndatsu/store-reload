@@ -4,8 +4,8 @@ import { upload } from "../../utils/api.utils";
 
 const router = Router();
 
-router.get("/getMany", userCtrl.getAllUsers);
-router.get("/getOne", userCtrl.getUser);
+router.get("/", userCtrl.getAllUsers);
+router.get("/:userId", userCtrl.getUser);
 router.get("/avatar", userCtrl.getAvatar);
 router.put("/avatar", upload.array("avatar", 1), userCtrl.uploadUserAvatar);
 

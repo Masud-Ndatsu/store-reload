@@ -7,7 +7,7 @@ class ProductService {
     // Get Product By ProductID
     static getProduct = async (req) => {
         try {
-            const { productId } = req.query;
+            const { productId } = req.params;
 
             const [product] = await Product.aggregate([
                 {

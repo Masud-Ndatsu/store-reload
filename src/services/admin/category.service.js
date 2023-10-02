@@ -14,7 +14,7 @@ export class CategoryService {
         return;
     };
     static getCategories = async () => {
-        const category = await Category.find({}).lean();
+        const category = await Category.aggregate([{ $match: {} }]);
         return { data: category };
     };
 }

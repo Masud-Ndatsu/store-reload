@@ -4,7 +4,6 @@ const addToCart = async (req, res, next) => {
     try {
         const userId = res.locals.user._id;
         await OrderService.addItemCart(req, userId);
-
         return res.status(201).json({
             status: true,
             data: null,
@@ -65,7 +64,7 @@ const getOrder = async (req, res, next) => {
         next(error);
     }
 };
-const getOrdersPlaced = async (req, res, next) => {
+const getOrders = async (req, res, next) => {
     try {
         const userId = res.locals.user._id;
         const { data } = await OrderService.getOrdersPlaced(req, userId);
@@ -106,7 +105,7 @@ const deleteOrder = async (req, res, next) => {
 };
 const clearOrderCart = async (req, res, next) => {
     try {
-        await OrderService.clearOrderCart(res.locals.userId);
+        await OrderService.clearOrderCart(res.locals.user._id);
         return res.status(200).json({
             status: true,
             data: null,
@@ -122,7 +121,7 @@ export default {
     getOrder,
     addToCart,
     getUserCart,
-    getOrdersPlaced,
+    getOrders,
     updateOrder,
     deleteOrder,
     clearOrderCart,

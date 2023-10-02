@@ -6,7 +6,6 @@ const schema = new Schema(
     {
         shopName: {
             type: String,
-            lowercase: true,
             index: true,
         },
         password: {

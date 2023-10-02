@@ -3,13 +3,13 @@ import orderControllers from "../../controllers/app/order.controllers.js";
 
 const router = Router();
 
-router.post("/add-to-cart", orderControllers.addToCart);
+router.post("/cart", orderControllers.addToCart);
 router.post("/create", orderControllers.createOrder);
-router.get("/getOne", orderControllers.getOrder);
-router.get("/get-user-cart", orderControllers.getUserCart);
-router.get("/get-orders", orderControllers.getOrdersPlaced);
-router.put("/update", orderControllers.updateOrder);
-router.delete("/delete", orderControllers.deleteOrder);
-router.delete("/delete-all", orderControllers.clearOrderCart);
+router.get("/:orderId", orderControllers.getOrder);
+router.get("/cart", orderControllers.getUserCart);
+router.get("/", orderControllers.getOrders);
+router.put("/:orderId", orderControllers.updateOrder);
+router.delete("/:orderId", orderControllers.deleteOrder);
+router.delete("/cart", orderControllers.clearOrderCart);
 
 export default router;

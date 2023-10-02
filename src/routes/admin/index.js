@@ -13,6 +13,6 @@ routes.use("/auth", authRoutes);
 routes.use(authAdminUser);
 routes.use("/users", userRoutes);
 routes.use("/products", productRoutes);
-routes.use("/category", categoryRoutes);
+routes.use("/categories", categoryRoutes);
 
 export default routes;

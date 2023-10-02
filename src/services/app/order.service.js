@@ -2,11 +2,7 @@ import { AppError } from "../../errors";
 import { OrderItem } from "../../models/order-item";
 import { Order } from "../../models/order.model";
 import { Product } from "../../models/product.model";
-import {
-    createOrderSchema,
-    addToCartSchema,
-    getOrderSchema,
-} from "../../utils/validators/app/order.validator";
+import { createOrderSchema, addToCartSchema, getOrderSchema } from "../../utils/validators/app/order.validator";
 
 class OrderService {
     static addItemCart = async (req, userId) => {
@@ -38,11 +34,7 @@ class OrderService {
         if (!item) {
             throw new AppError("Item not found", 404);
         }
-        const cartItem = await OrderItem.findOneAndUpdate(
-            { _id: itemId, userId },
-            { quantity },
-            { new: true }
-        );
+        const cartItem = await OrderItem.findOneAndUpdate({ _id: itemId, userId }, { quantity }, { new: true });
 
         return cartItem;
     };
@@ -80,10 +72,7 @@ class OrderService {
 
         const cartItemIds = cartItems.map((cartItem) => cartItem._id);
 
-        const totalPrice = cartItems.reduce(
-            (prev, item) => prev + item.product.price * item.quantity,
-            0
-        );
+        const totalPrice = cartItems.reduce((prev, item) => prev + item.product.price * item.quantity, 0);
 
         return { data: { cartItems, cartItemIds, totalPrice } };
     };
@@ -107,8 +96,8 @@ class OrderService {
     };
 
     static getOrder = async (req) => {
-        const { orderId } = req.query;
-        const { error } = getOrderSchema.validate(req.query);
+        const { orderId } = req.params;
+        const { error } = getOrderSchema.validate(req.params);
 
         if (error) {
             throw new AppError(error.message, 400);
@@ -170,7 +159,7 @@ class OrderService {
     };
 
     static editOrder = async (req) => {
-        const { error, value } = getOrderSchema.validate(req.query);
+        const { error, value } = getOrderSchema.validate(req.params);
 
         if (error) {
             throw new AppError(error.message, 400);
@@ -184,16 +173,12 @@ class OrderService {
             throw new AppError("Order not found", 404);
         }
 
-        const updatedOrder = await Order.findOneAndUpdate(
-            { _id: orderId },
-            { ...req.body },
-            { new: true }
-        );
+        const updatedOrder = await Order.findOneAndUpdate({ _id: orderId }, { ...req.body }, { new: true });
         return updatedOrder;
     };
 
     static deleteOrder = async (req) => {
-        const { error, value } = getOrderSchema.validate(req.query);
+        const { error, value } = getOrderSchema.validate(req.params);
         if (error) {
             throw new AppError(error.message, 400);
         }
