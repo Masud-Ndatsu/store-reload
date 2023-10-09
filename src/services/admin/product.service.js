@@ -62,7 +62,7 @@ class ProductService {
             const products = await Product.aggregate([
                 {
                     $lookup: {
-                        from: "categories", // Replace with the name of your Category collection
+                        from: "categories",
                         localField: "category",
                         foreignField: "_id",
                         as: "category",
@@ -81,7 +81,6 @@ class ProductService {
                         category: { $first: "$category.name" },
                         price: { $first: "$price" },
                         images: { $first: "$images" },
-                        // Add other fields as needed
                     },
                 },
                 {
@@ -112,8 +111,7 @@ class ProductService {
     static editProduct = async (req) => {
         try {
             const { productId } = req.params;
-            const productReq = req.body;
-            const { error, value } = editProductSchema.validate(productReq);
+            const { error, value } = editProductSchema.validate(req.body);
             if (error) {
                 throw new AppError(error.message, 400);
             }
@@ -121,7 +119,7 @@ class ProductService {
             if (!product) {
                 throw new AppError("product not found", 404);
             }
-            await Product.findByIdAndUpdate(productId, { ...value }, { new: true });
+            await Product.findOneAndUpdate({ id: productId }, { ...value }, { new: true });
             return;
         } catch (error) {
             throw error;

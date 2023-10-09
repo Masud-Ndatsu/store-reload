@@ -6,7 +6,7 @@ const router = Router();
 
 router.get("/", userCtrl.getAllUsers);
 router.get("/:userId", userCtrl.getUser);
-router.get("/avatar", userCtrl.getAvatar);
-router.put("/avatar", upload.array("avatar", 1), userCtrl.uploadUserAvatar);
+router.get("/me", userCtrl.getUserProfile);
+router.put("/avatar", upload.array("avatar", 1), userCtrl.updateUser);
 
 export default router;

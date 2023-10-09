@@ -34,10 +34,12 @@ class UserService {
                     },
                 },
             ]);
+
+            console.log({ user });
             if (!user) {
                 throw new AppError("user not found", 404);
             }
-            return { data: { ...user, shop: user.shop[0] } };
+            return { data: user };
         } catch (error) {
             throw error;
         }

@@ -1,5 +1,6 @@
 import { Admin } from "../../models/admin.model";
 import { User } from "../../models/user.model";
+import { createHash } from "../../utils/auth.utils";
 import { uploadFile } from "../storage/cloudinary.service";
 
 class UserService {
@@ -30,7 +31,7 @@ class UserService {
         return { data: user };
     };
 
-    static getAvatar = async (userId) => {
+    static getUserProfile = async (userId) => {
         const [user] = await Admin.aggregate([
             { $match: { $expr: { $eq: [{ $toString: "$_id" }, userId] } } },
             {
@@ -39,12 +40,24 @@ class UserService {
                 },
             },
         ]);
-        return { data: user.avatar };
+        return { data: user };
     };
-    static uploadUserAvatar = async (req, userId) => {
-        let images = await uploadFile(req);
+    static updateUser = async (req, userId) => {
+        let images;
+        const { password } = req.body;
+        if (req.files) {
+            images = await uploadFile(req);
+        }
+
+        if (req.body.password) {
+            req.body.password = await createHash(password);
+        }
         const avatar = images[0];
-        await User.findByIdAndUpdate(userId, { avatar }, { new: true });
+        await Admin.findByIdAndUpdate(
+            userId,
+            { ...req.body, avatar },
+            { new: true }
+        );
         return;
     };
 }
