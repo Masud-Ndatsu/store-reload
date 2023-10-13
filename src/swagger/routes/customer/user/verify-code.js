@@ -15,6 +15,8 @@
  *                            properties:
  *                               code:
  *                                  type: string
+ *                            example:
+ *                                 code: 1235
  *              responses:
  *                  "200":
  *                      description: Request successful

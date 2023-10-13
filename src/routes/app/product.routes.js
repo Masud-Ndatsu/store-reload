@@ -3,9 +3,9 @@ import productControllers from "../../controllers/app/product.controllers.js";
 
 const router = Router();
 
-router.get("/getOne", productControllers.getProduct);
-router.get("/getMany", productControllers.getProducts);
-router.get("/getByCategory", productControllers.getProductsByCategory);
-router.get("/getBySearchText", productControllers.getProductBySearchText);
+router.get("/type", productControllers.getProducts);
+router.get("/category", productControllers.getProductsByCategory);
+router.get("/search", productControllers.getProductBySearchText);
+router.get("/:productId", productControllers.getProduct);
 
 export default router;

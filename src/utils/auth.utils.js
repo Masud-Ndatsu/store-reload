@@ -1,4 +1,4 @@
-import { hash, compare } from "bcrypt";
+import { hash, compare } from "bcryptjs";
 import { sign, verify } from "jsonwebtoken";
 const { SALT } = process.env;
 
