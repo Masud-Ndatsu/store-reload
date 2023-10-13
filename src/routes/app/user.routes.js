@@ -1,11 +1,11 @@
 import { Router } from "express";
-import userControllers from "../../controllers/app/user.controllers.js";
+import controllers from "../../controllers/app/user.controllers.js";
 
 const router = Router();
 
-router.get("/me", userControllers.userProfileDetails);
-router.put("/me", userControllers.updateUser);
-router.post("/verify-code", userControllers.verifyCustomerData);
-router.post("/logout", userControllers.logoutUser);
+router.get("/me", controllers.userProfile);
+router.put("/me", controllers.updateUser);
+router.get("/wallet", controllers.getWallet);
+router.post("/verify-code", controllers.verifyUser);
 
 export default router;
