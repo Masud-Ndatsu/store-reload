@@ -1,6 +1,7 @@
 import UserService from "../../services/app/user.service.js";
+import walletService from "../../services/app/wallet.service.js";
 
-const userProfileDetails = async (req, res, next) => {
+const userProfile = async (req, res, next) => {
      try {
           const userId = res.locals.user._id.toString();
           const { data } = await UserService.getUserProfile(userId);
@@ -17,7 +18,7 @@ const userProfileDetails = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
      try {
           const userId = res.locals.user._id;
-          await UserService.updateUserDetails(userId, { ...req.body });
+          await UserService.updateUser(userId, { ...req.body });
           return res.status(200).json({
                status: true,
                data: null,
@@ -28,9 +29,9 @@ const updateUser = async (req, res, next) => {
      }
 };
 
-const verifyCustomerData = async (req, res, next) => {
+const verifyUser = async (req, res, next) => {
      try {
-          await UserService.verifyCustomerData({ ...req.body });
+          await UserService.verifyUser({ ...req.body });
           return res.status(200).json({
                status: true,
                data: null,
@@ -40,11 +41,12 @@ const verifyCustomerData = async (req, res, next) => {
           next(error);
      }
 };
-const logoutUser = async (req, res, next) => {
+
+const getWallet = async (req, res, next) => {
      try {
-          const user = res.locals.user;
-          const { data } = await UserService.logoutUser(user);
-          return res.status(200).json({
+          const user = res.locals.user._id;
+          const { data } = await walletService.getWallet({ user });
+          return res.status().json({
                status: true,
                data,
                message: "Request successful",
@@ -56,7 +58,7 @@ const logoutUser = async (req, res, next) => {
 
 export default {
      updateUser,
-     verifyCustomerData,
-     userProfileDetails,
-     logoutUser,
+     verifyUser,
+     userProfile,
+     getWallet,
 };
