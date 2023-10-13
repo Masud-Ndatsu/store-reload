@@ -2,8 +2,8 @@
  * @openapi
  * /customer/users/me:
  *          put:
- *              summary: Customer Profile
- *              operationId: customer-profile
+ *              summary: Customer Profile Update
+ *              operationId: customer-profile-update
  *              tags:
  *                 - Customer
  *              requestBody:
@@ -13,7 +13,17 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               code:
+ *                               email:
+ *                                  type: string
+ *                               phoneNumber:
+ *                                  type: string
+ *                               NIN:
+ *                                  type: string
+ *                               firstName:
+ *                                  type: string
+ *                               lastName:
+ *                                  type: string
+ *                               gender:
  *                                  type: string
  *              responses:
  *                  "200":
