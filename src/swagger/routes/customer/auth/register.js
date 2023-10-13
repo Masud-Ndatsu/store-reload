@@ -17,6 +17,15 @@
  *                                  type: string
  *                               password:
  *                                  type: string
+ *                               address:
+ *                                  type: string
+ *                               LGA:
+ *                                  type: string
+ *                            example:
+ *                               shopName: Amuse Finance
+ *                               password: financial
+ *                               address: New Line Mall
+ *                               LGA: New York, California
  *              responses:
  *                  "200":
  *                      description: Resquest Successful

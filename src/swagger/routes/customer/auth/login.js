@@ -17,6 +17,9 @@
  *                                  type: string
  *                               password:
  *                                  type: string
+ *                            example:
+ *                               shopName: Amuse Finance
+ *                               password: financial
  *              responses:
  *                  "200":
  *                      description: Resquest Successful
