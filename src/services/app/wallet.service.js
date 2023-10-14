@@ -1,17 +1,20 @@
 import axios from "axios";
 import { Wallet } from "../../models/wallet.model";
 import { AppError } from "../../errors";
+import { User } from "../../models/user.model";
 
 class WalletService {
-     #api_key = process.env.FLUTTERWAVE_API_KEY;
-     #url = process.env.FLUTTERWAVE_BASE_URL;
+     #api_key = process.env.FLW_SECRET_KEY;
+     #url = process.env.FLW_BASE_URL;
 
      createWallet = async ({ email }) => {
           try {
                const data = {
                     currency: "NGN",
                     email,
+                    amount: 10000,
                };
+
                const response = await axios.post(
                     `${this.#url}/virtual-account-numbers`,
                     data,
@@ -25,6 +28,7 @@ class WalletService {
 
                return response.data;
           } catch (error) {
+               console.log("error: ", error.message);
                throw error;
           }
      };
@@ -36,7 +40,6 @@ class WalletService {
                     {
                          headers: {
                               Authorization: `Bearer ${this.#api_key}`,
-                              "Content-Type": "application/json",
                          },
                     }
                );
@@ -47,18 +50,18 @@ class WalletService {
           }
      };
 
-     getWallet = async ({ user }) => {
+     getWallet = async ({ user_id }) => {
           try {
-               const wallet = await Wallet.findOne({ user }).lean();
-
+               const user = await User.findOne({ shop: user_id }).lean();
+               const wallet = await Wallet.findOne({ user: user._id }).lean();
                if (!wallet) {
-                    throw AppError("Wallet not found", 404);
+                    throw new AppError("Wallet not found", 404);
                }
                const { reference } = wallet;
 
-               const data = await this.#getWallet({ reference });
+               const response = await this.#getWallet({ reference });
 
-               return { data };
+               return { data: response.data };
           } catch (error) {
                throw error;
           }
