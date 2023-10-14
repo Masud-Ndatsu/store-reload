@@ -4,7 +4,7 @@ const addToCart = async (req, res, next) => {
      try {
           const userId = res.locals.user._id;
           await OrderService.addItemCart(req, userId);
-          return res.status(201).json({
+          return res.status(200).json({
                status: true,
                data: null,
                message: "Request successful",
@@ -42,10 +42,10 @@ const getUserCart = async (req, res, next) => {
 const createOrder = async (req, res, next) => {
      try {
           const userId = res.locals.user._id;
-          await OrderService.createOrder(req, userId);
-          return res.status(201).json({
+          const { data } = await OrderService.createOrder(req, userId);
+          return res.status(200).json({
                status: true,
-               data: null,
+               data,
                message: "Request successful",
           });
      } catch (error) {

@@ -15,6 +15,20 @@ const userProfile = async (req, res, next) => {
      }
 };
 
+const accountSetup = async (req, res, next) => {
+     try {
+          const userId = res.locals.user._id;
+          await UserService.accountSetup(userId, { ...req.body });
+          return res.status(200).json({
+               status: true,
+               data: null,
+               message: "Request successful",
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
 const updateUser = async (req, res, next) => {
      try {
           const userId = res.locals.user._id;
@@ -44,9 +58,9 @@ const verifyUser = async (req, res, next) => {
 
 const getWallet = async (req, res, next) => {
      try {
-          const user = res.locals.user._id;
-          const { data } = await walletService.getWallet({ user });
-          return res.status().json({
+          const user_id = res.locals.user._id;
+          const { data } = await walletService.getWallet({ user_id });
+          return res.status(200).json({
                status: true,
                data,
                message: "Request successful",
@@ -61,4 +75,5 @@ export default {
      verifyUser,
      userProfile,
      getWallet,
+     accountSetup,
 };
