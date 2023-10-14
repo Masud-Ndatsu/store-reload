@@ -4,7 +4,7 @@ import {
      verifyUserEmailSchema,
 } from "../../utils/validators/app/user.validator.js";
 import { sendMail } from "../email/nodemailer";
-import { genAuthCode, generateToken } from "../../utils/auth.utils.js";
+import { genAuthCode } from "../../utils/auth.utils.js";
 import { User } from "../../models/user.model.js";
 import { ShopModel } from "../../models/shop.model.js";
 import { Wallet } from "../../models/wallet.model.js";
@@ -72,14 +72,16 @@ class UserService {
           const user = await User.findOneAndUpdate(
                { shop: shopId },
                { shop: shopId },
-               { upsert: true }
+               {
+                    upsert: true,
+                    new: true,
+               }
           ).lean();
-
-          let authCode;
 
           const { email } = value;
 
-          authCode = genAuthCode();
+          let authCode = genAuthCode();
+
           await Promise.all([
                ShopModel.updateOne(
                     { _id: shopId },
@@ -93,7 +95,16 @@ class UserService {
                }),
           ]);
 
+          await User.findByIdAndUpdate(
+               user._id,
+               {
+                    ...value,
+               },
+               { new: true }
+          );
+
           const response = await walletService.createWallet({ email });
+
           const { account_number, order_ref, amount } = response.data;
 
           await Wallet.create({
@@ -112,8 +123,6 @@ class UserService {
                throw new AppError(error.message);
           }
           const user = await User.findOne({ shop: shopId }).lean();
-
-          console.log(user);
 
           if (data.email && user.verified) {
                await User.findOneAndUpdate(
@@ -179,18 +188,6 @@ class UserService {
           );
 
           return;
-     }
-     static async logoutUser(user) {
-          try {
-               const token = await generateToken(
-                    { id: user._id },
-                    process.env.APP_SIGNATURE,
-                    1
-               );
-               return { data: { user, token } };
-          } catch (error) {
-               throw error;
-          }
      }
 }
 
