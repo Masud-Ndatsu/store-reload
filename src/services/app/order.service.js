@@ -17,9 +17,9 @@ class OrderService {
           if (error) {
                throw new AppError(error.message, 400);
           }
-          const { productId, quantity } = req.body;
+          const { product_id, quantity } = req.body;
 
-          const product = await Product.findById(productId)
+          const product = await Product.findById(product_id)
                .select("_id")
                .lean();
 
@@ -35,31 +35,39 @@ class OrderService {
           return;
      };
 
-     static updateCartItem = async (req, userId) => {
-          const { itemId, quantity } = req.body;
-          const item = await OrderItem.findOne({ _id: itemId, userId }).lean();
+     static updateCartItem = async (req, user_id) => {
+          const { item_id, quantity } = req.body;
+
+          const item = await OrderItem.findOne({
+               _id: item_id,
+               user: user_id,
+          }).lean();
 
           if (!item) {
                throw new AppError("Item not found", 404);
           }
-          const cartItem = await OrderItem.findOneAndUpdate(
+          await OrderItem.findOneAndUpdate(
                {
-                    _id: itemId,
-                    user: userId,
+                    _id: item._id,
+                    user: user_id,
                },
-               { quantity },
-               { new: true }
+               {
+                    quantity,
+               },
+               {
+                    new: true,
+               }
           );
 
-          return cartItem;
+          return;
      };
 
      static getUserCartItems = async (user_id) => {
-          const cartItems = await OrderItem.aggregate([
+          const cart_items = await OrderItem.aggregate([
                {
                     $lookup: {
                          from: "products",
-                         localField: "productId",
+                         localField: "product_id",
                          foreignField: "_id",
                          as: "product",
                     },
@@ -67,10 +75,7 @@ class OrderService {
                {
                     $match: {
                          $expr: {
-                              $eq: [
-                                   { $toString: "$userId" },
-                                   user_id.toString(),
-                              ],
+                              $eq: [{ $toString: "$user" }, user_id.toString()],
                          },
                     },
                },
@@ -84,18 +89,24 @@ class OrderService {
                },
           ]);
 
-          if (cartItems.length === 0) {
+          if (cart_items.length === 0) {
                throw new AppError("Cart is empty", 404);
           }
 
-          const cartItemIds = cartItems.map((cartItem) => cartItem._id);
+          const cartItem_ids = cart_items.map((cartItem) => cartItem._id);
 
-          const totalPrice = cartItems.reduce(
+          const total_price = cart_items.reduce(
                (prev, item) => prev + item.product.price * item.quantity,
                0
           );
 
-          return { data: { cartItems, cartItemIds, totalPrice } };
+          return {
+               data: {
+                    cart_items,
+                    cartItem_ids,
+                    total_price,
+               },
+          };
      };
 
      static createOrder = async (req, user_id) => {
@@ -109,11 +120,11 @@ class OrderService {
 
           const newOrder = new OrderModel();
 
-          const { orderedItems, totalPrice, shippingAddress } = value;
+          const { ordered_items, total_price, shipping_address } = value;
 
           const payInt = await paymentService.initialize({
                user: user._id,
-               amount: Number(totalPrice),
+               amount: Number(total_price),
                email: user.email,
                order: newOrder._id,
           });
@@ -127,10 +138,10 @@ class OrderService {
 
           await new OrderModel({
                _id: newOrder._id,
-               products: orderedItems,
+               products: ordered_items,
                user: user._id,
-               price: Number(totalPrice),
-               shippingAddress,
+               price: Number(total_price),
+               shipping_address,
                reference: payInt.data.reference,
           }).save();
 
@@ -142,14 +153,14 @@ class OrderService {
      };
 
      static getOrder = async (req) => {
-          const { orderId } = req.params;
+          const { order_id } = req.params;
           const { error } = getOrderSchema.validate(req.params);
 
           if (error) {
                throw new AppError(error.message, 400);
           }
 
-          const order = await OrderModel.findById(orderId).lean();
+          const order = await OrderModel.findById(order_id).lean();
 
           if (!order) {
                throw new AppError("Order not found", 404);
@@ -158,7 +169,7 @@ class OrderService {
           return { data: order };
      };
 
-     static getOrdersPlaced = async (req, userId) => {
+     static getOrdersPlaced = async (req, user_id) => {
           const page = req.query.page ? Number(req.query.page) : 1;
           const limit = req.query.limit ? Number(req.query.limit) : 5;
 
@@ -174,7 +185,7 @@ class OrderService {
                {
                     $lookup: {
                          from: "shops",
-                         localField: "userId",
+                         localField: "user_id",
                          foreignField: "_id",
                          as: "user",
                          pipeline: [
@@ -190,7 +201,7 @@ class OrderService {
                },
                {
                     $match: {
-                         userId,
+                         user_id,
                     },
                },
                {
@@ -204,58 +215,30 @@ class OrderService {
           return { data: orders };
      };
 
-     static editOrder = async (req) => {
-          const { error, value } = getOrderSchema.validate(req.params);
-
-          if (error) {
-               throw new AppError(error.message, 400);
-          }
-
-          const { orderId } = value;
-
-          const order = await OrderModel.findOne({ _id: orderId })
-               .select("_id")
-               .lean();
-
-          if (!order) {
-               throw new AppError("Order not found", 404);
-          }
-
-          const { orderedItems } = req.body;
-
-          const updatedOrder = await OrderModel.findOneAndUpdate(
-               { _id: orderId },
-               {
-                    ...req.body,
-                    products: orderedItems,
-               },
-               { new: true }
-          );
-          return updatedOrder;
-     };
-
      static deleteOrder = async (req) => {
           const { error, value } = getOrderSchema.validate(req.params);
           if (error) {
                throw new AppError(error.message, 400);
           }
 
-          const { orderId } = value;
+          const { order_id } = value;
 
-          const order = await OrderModel.findById(orderId).select("_id").lean();
+          const order = await OrderModel.findById(order_id)
+               .select("_id")
+               .lean();
 
           if (!order) {
                throw new AppError("Order not found", 404);
           }
-          await Order.findByIdAndDelete(orderId);
+          await Order.findByIdAndDelete(order_id);
           return;
      };
 
-     static clearCartItems = async (userId) => {
+     static clearCartItems = async (user_id) => {
           const orderItems = await OrderItem.aggregate([
                {
                     $match: {
-                         userId,
+                         user_id,
                     },
                },
           ]);
@@ -263,7 +246,7 @@ class OrderService {
           if (orderItems.length === 0) {
                throw new AppError("your cart is empty", 404);
           }
-          const items = await OrderItem.deleteMany({ userId });
+          const items = await OrderItem.deleteMany({ user_id });
           return items;
      };
 }
