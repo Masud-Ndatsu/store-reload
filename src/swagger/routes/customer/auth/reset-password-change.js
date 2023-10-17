@@ -13,7 +13,7 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               userID:
+ *                               user_id:
  *                                  type: string
  *                               password:
  *                                  type: string
