@@ -29,6 +29,23 @@ const accountSetup = async (req, res, next) => {
      }
 };
 
+const userSupportMessage = async (req, res, next) => {
+     try {
+          const { message } = req.body;
+          const shop_id = res.locals.user._id;
+
+          await UserService.userSupportMessage({ message, shop_id });
+
+          return res.status(200).json({
+               status: true,
+               data: null,
+               message: "Request successful",
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
 const updateUser = async (req, res, next) => {
      try {
           const userId = res.locals.user._id;
@@ -58,8 +75,27 @@ const verifyUser = async (req, res, next) => {
 
 const getWallet = async (req, res, next) => {
      try {
-          const user_id = res.locals.user._id;
-          const { data } = await walletService.getWallet({ user_id });
+          const shop_id = res.locals.user._id;
+          const { data } = await walletService.getWallet({ shop_id });
+          return res.status(200).json({
+               status: true,
+               data,
+               message: "Request successful",
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
+const withdrawWallet = async (req, res, next) => {
+     try {
+          const { amount } = req.body;
+          const shop_id = res.locals.user._id;
+          const { data } = await walletService.withdrawWallet({
+               shop_id,
+               amount,
+          });
+
           return res.status(200).json({
                status: true,
                data,
@@ -76,4 +112,6 @@ export default {
      userProfile,
      getWallet,
      accountSetup,
+     withdrawWallet,
+     userSupportMessage,
 };

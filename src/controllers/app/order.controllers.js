@@ -78,19 +78,6 @@ const getOrders = async (req, res, next) => {
      }
 };
 
-const updateOrder = async (req, res, next) => {
-     try {
-          await OrderService.editOrder(req);
-          return res.status(200).json({
-               status: true,
-               data: null,
-               message: "Request successful",
-          });
-     } catch (error) {
-          next(error);
-     }
-};
-
 const deleteOrder = async (req, res, next) => {
      try {
           await OrderService.deleteOrder(req);
@@ -122,7 +109,7 @@ export default {
      addToCart,
      getUserCart,
      getOrders,
-     updateOrder,
      deleteOrder,
+     updateCartItem,
      clearOrderCart,
 };
