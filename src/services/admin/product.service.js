@@ -1,143 +1,167 @@
 import { AppError } from "../../errors";
 import { Product } from "../../models/product.model";
-import { createProductSchema, editProductSchema } from "../../utils/validators/admin/product.validator";
+import {
+     createProductSchema,
+     editProductSchema,
+} from "../../utils/validators/admin/product.validator";
 import { uploadFile } from "../storage/cloudinary.service";
 
 class ProductService {
-    static createProduct = async (req) => {
-        try {
-            const { error } = createProductSchema.validate(req.body);
-            if (error) {
-                throw new AppError(error.message);
-            }
-            const tags = JSON.parse(req.body.tags);
+     static createProduct = async (req) => {
+          try {
+               const { error } = createProductSchema.validate(req.body);
+               if (error) {
+                    throw new AppError(error.message);
+               }
+               req.body.tags = JSON.parse(req.body.tags);
 
-            const price = Number(req.body.price);
+               req.body.price = Number(req.body.price);
 
-            let images;
+               req.body.inventry = Number(req.body.inventry);
 
-            if (req.files) {
-                images = await uploadFile(req);
-            }
+               if (req.files) {
+                    req.body.images = await uploadFile(req);
+               }
 
-            await Product.create({ ...req.body, images, tags, price });
-            return;
-        } catch (error) {
-            throw error;
-        }
-    };
-    static getProducts = async (req) => {
-        try {
-            const { type } = req.query;
+               await new Product({
+                    ...req.body,
+               }).save();
 
-            const page = req.query.page ? Number(req.query.page) : 1;
-            const limit = req.query.limit ? Number(req.query.limit) : 5;
+               return;
+          } catch (error) {
+               throw error;
+          }
+     };
+     static getProducts = async (req) => {
+          try {
+               const { type } = req.query;
 
-            if (!type) {
-                throw new AppError("type is required", 400);
-            }
+               const page = req.query.page ? Number(req.query.page) : 1;
+               const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-            const products = await Product.find({ type })
-                .limit(limit)
-                .skip((page - 1) * limit)
-                .lean();
+               if (!type) {
+                    throw new AppError("type is required", 400);
+               }
 
-            return { data: products };
-        } catch (error) {
-            throw error;
-        }
-    };
+               const products = await Product.find({ type })
+                    .limit(limit)
+                    .skip((page - 1) * limit)
+                    .lean();
 
-    static getProductBySearchText = async (req) => {
-        try {
-            const page = req.query.page ? Number(req.query.page) : 1;
-            const limit = req.query.limit ? Number(req.query.limit) : 5;
+               return { data: products };
+          } catch (error) {
+               throw error;
+          }
+     };
 
-            const { searchText } = req.query;
+     static getProductBySearchText = async (req) => {
+          try {
+               const page = req.query.page ? Number(req.query.page) : 1;
+               const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-            if (!searchText) {
-                throw new AppError("searchText is required", 400);
-            }
+               const { search_text } = req.query;
 
-            const products = await Product.aggregate([
-                {
-                    $lookup: {
-                        from: "categories",
-                        localField: "category",
-                        foreignField: "_id",
-                        as: "category",
+               if (!search_text) {
+                    throw new AppError("search_text is required", 400);
+               }
+
+               const products = await Product.aggregate([
+                    {
+                         $lookup: {
+                              from: "categories",
+                              localField: "category",
+                              foreignField: "_id",
+                              as: "category",
+                         },
                     },
-                },
-                {
-                    $unwind: {
-                        path: "$category",
-                        preserveNullAndEmptyArrays: true,
+                    {
+                         $unwind: {
+                              path: "$category",
+                              preserveNullAndEmptyArrays: true,
+                         },
                     },
-                },
-                {
-                    $group: {
-                        _id: "$_id",
-                        name: { $first: "$name" },
-                        category: { $first: "$category.name" },
-                        price: { $first: "$price" },
-                        images: { $first: "$images" },
+                    {
+                         $group: {
+                              _id: "$_id",
+                              name: { $first: "$name" },
+                              category: { $first: "$category.name" },
+                              price: { $first: "$price" },
+                              images: { $first: "$images" },
+                         },
                     },
-                },
-                {
-                    $match: {
-                        $or: [
-                            {
-                                name: { $regex: searchText, $options: "i" },
-                            },
-                            {
-                                category: { $regex: searchText, $options: "i" },
-                            },
-                        ],
+                    {
+                         $match: {
+                              $or: [
+                                   {
+                                        name: {
+                                             $regex: search_text,
+                                             $options: "i",
+                                        },
+                                   },
+                                   {
+                                        category: {
+                                             $regex: search_text,
+                                             $options: "i",
+                                        },
+                                   },
+                              ],
+                         },
                     },
-                },
-                {
-                    $skip: (page - 1) * limit,
-                },
-                {
-                    $limit: limit,
-                },
-            ]);
+                    {
+                         $skip: (page - 1) * limit,
+                    },
+                    {
+                         $limit: limit,
+                    },
+               ]);
 
-            return { data: products };
-        } catch (error) {
-            throw error;
-        }
-    };
-    static editProduct = async (req) => {
-        try {
-            const { productId } = req.params;
-            const { error, value } = editProductSchema.validate(req.body);
-            if (error) {
-                throw new AppError(error.message, 400);
-            }
-            const product = await Product.findById(productId).select("_id").lean();
-            if (!product) {
-                throw new AppError("product not found", 404);
-            }
-            await Product.findOneAndUpdate({ id: productId }, { ...value }, { new: true });
-            return;
-        } catch (error) {
-            throw error;
-        }
-    };
-    static deleteProduct = async (req) => {
-        try {
-            const { productId } = req.params;
-            const product = await Product.findById(productId).select("_id").lean();
-            if (!product) {
-                throw new AppError("product not found", 404);
-            }
-            await Product.findByIdAndDelete(productId);
-            return;
-        } catch (error) {
-            throw error;
-        }
-    };
+               return { data: products };
+          } catch (error) {
+               throw error;
+          }
+     };
+     static editProduct = async (req) => {
+          try {
+               const { product_id } = req.params;
+               const { error, value } = editProductSchema.validate(req.body);
+               if (error) {
+                    throw new AppError(error.message, 400);
+               }
+               const product = await Product.findById(product_id)
+                    .select("_id")
+                    .lean();
+               if (!product) {
+                    throw new AppError("product not found", 404);
+               }
+               await Product.findOneAndUpdate(
+                    {
+                         _id: product._id,
+                    },
+                    {
+                         ...value,
+                    },
+                    { new: true }
+               );
+               return;
+          } catch (error) {
+               throw error;
+          }
+     };
+     static deleteProduct = async (req) => {
+          try {
+               const { product_id } = req.params;
+               const product = await Product.findById(product_id)
+                    .select("_id")
+                    .lean();
+               if (!product) {
+                    throw new AppError("product not found", 404);
+               }
+               await Product.findByIdAndDelete(product_id);
+               return;
+          } catch (error) {
+               throw error;
+          }
+     };
 }
 
 export default ProductService;
