@@ -1,12 +1,12 @@
 import { Router } from "express";
-import productControllers from "../../controllers/admin/product.controllers";
+import controllers from "../../controllers/admin/product.controllers";
 import { upload } from "../../utils/api.utils";
 
 const router = Router();
-router.post("/create", upload.array("image", 4), productControllers.createProduct);
-router.get("/", productControllers.getProducts);
-router.get("/:productId", productControllers.getProduct);
-router.put("/:productId", productControllers.editProduct);
-router.delete("/:productId", productControllers.deleteProduct);
+router.post("/create", upload.array("image", 4), controllers.createProduct);
+router.get("/", controllers.getProducts);
+router.get("/:product_id", controllers.getProduct);
+router.put("/:product_id", controllers.editProduct);
+router.delete("/:product_id", controllers.deleteProduct);
 
 export default router;
