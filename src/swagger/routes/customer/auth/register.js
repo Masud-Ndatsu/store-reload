@@ -13,7 +13,7 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               shopName:
+ *                               shop_name:
  *                                  type: string
  *                               password:
  *                                  type: string
@@ -22,7 +22,7 @@
  *                               LGA:
  *                                  type: string
  *                            example:
- *                               shopName: Amuse Finance
+ *                               shop_name: Amuse Finance
  *                               password: financial
  *                               address: New Line Mall
  *                               LGA: New York, California
