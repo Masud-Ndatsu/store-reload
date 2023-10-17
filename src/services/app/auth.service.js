@@ -18,18 +18,18 @@ import sendMail from "../email/nodemailer.js";
 class AuthService {
      static async createUser(req) {
           try {
-               const { shopName, password } = req.body;
+               const { shop_name, password } = req.body;
                const { error, value } = createUserSchema.validate(req.body);
 
                if (error) {
                     throw new AppError(error.message, 400);
                }
 
-               const existingShop = await ShopModel.findOne({
-                    shopName,
+               const shopExits = await ShopModel.findOne({
+                    shop_name,
                }).lean();
 
-               if (existingShop) {
+               if (shopExits) {
                     throw new AppError("shop name already exists", 400);
                }
                const hashpwd = await createHash(password);
@@ -39,7 +39,9 @@ class AuthService {
                     password: hashpwd,
                });
 
-               return shop;
+               await new User({ shop: shop._id }).save();
+
+               return;
           } catch (error) {
                throw error;
           }
@@ -47,7 +49,7 @@ class AuthService {
 
      static async loginUser(req) {
           try {
-               const { shopName, password } = req.body;
+               const { shop_name, password } = req.body;
 
                const { error } = loginSchema.validate(req.body);
 
@@ -55,36 +57,33 @@ class AuthService {
                     throw new AppError(error.message, 400);
                }
 
-               const [existingShop] = await ShopModel.aggregate([
+               const [shopExits] = await ShopModel.aggregate([
                     {
                          $match: {
                               $expr: {
-                                   $eq: [{ $toString: "$shopName" }, shopName],
+                                   $eq: ["$shop_name", shop_name],
                               },
                          },
                     },
                ]);
-               if (!existingShop) {
+               if (!shopExits) {
                     throw new AppError("shop name not found", 404);
                }
 
-               const isValid = await verifyHash(
-                    password,
-                    existingShop.password
-               );
+               const isValid = await verifyHash(password, shopExits.password);
 
                if (!isValid) {
                     throw new AppError("Incorrect password", 400);
                }
 
                const token = await generateToken(
-                    { id: existingShop._id },
+                    { id: shopExits._id },
                     process.env.APP_SIGNATURE
                );
 
                return {
                     data: {
-                         user: existingShop,
+                         user: shopExits,
                          token,
                     },
                };
@@ -120,7 +119,7 @@ class AuthService {
                await ShopModel.findOneAndUpdate(
                     { _id: shop._id },
                     {
-                         authCode: code,
+                         auth_code: code,
                     },
                     { new: true }
                );
@@ -156,22 +155,22 @@ class AuthService {
           try {
                const { error, value } = resetPasswordSchema.validate(req.body);
 
-               const { userID, password } = value;
+               const { shop_id, password } = value;
 
                if (error) {
                     throw new AppError(error.message, 400);
                }
-               const user = await ShopModel.findById(userID)
+               const shop = await ShopModel.findById(shop_id)
                     .select("_id")
                     .lean();
 
-               if (!user) {
+               if (!shop) {
                     throw new AppError("shop not found", 404);
                }
                const hashpwd = await createHash(password);
 
                await ShopModel.findOneAndUpdate(
-                    { _id: user._id },
+                    { _id: shop._id },
                     {
                          password: hashpwd,
                     },
