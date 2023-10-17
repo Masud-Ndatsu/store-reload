@@ -15,13 +15,13 @@
  *                            properties:
  *                               email:
  *                                  type: string
- *                               phoneNumber:
+ *                               phone_number:
  *                                  type: string
  *                               NIN:
  *                                  type: string
- *                               firstName:
+ *                               first_name:
  *                                  type: string
- *                               lastName:
+ *                               last_name:
  *                                  type: string
  *                               gender:
  *                                  type: string

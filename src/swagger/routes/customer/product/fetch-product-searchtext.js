@@ -8,7 +8,7 @@
  *                 - Customer
  *              parameters:
  *                  - in: query
- *                    name: searchText
+ *                    name: search_text
  *                    required: true
  *                  - in: query
  *                    name: limit

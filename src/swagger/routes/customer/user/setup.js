@@ -15,16 +15,23 @@
  *                            properties:
  *                               email:
  *                                  type: string
- *                               phoneNumber:
+ *                               phone_number:
  *                                  type: string
  *                               NIN:
  *                                  type: string
- *                               firstName:
+ *                               first_name:
  *                                  type: string
- *                               lastName:
+ *                               last_name:
  *                                  type: string
  *                               gender:
  *                                  type: string
+ *                            example:
+ *                               email: masudndatsu@gmail.com
+ *                               phone_number: "08167133592"
+ *                               NIN: "28167133592"
+ *                               first_name: Masud
+ *                               last_name: Ndatsu
+ *                               gender: Male
  *              responses:
  *                  "200":
  *                     description: Request successful

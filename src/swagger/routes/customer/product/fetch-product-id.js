@@ -8,7 +8,7 @@
  *                 - Customer
  *              parameters:
  *                  - in: path
- *                    name: productId
+ *                    name: product_id
  *                    required: true
  *              responses:
  *                  "200":

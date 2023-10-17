@@ -1,14 +1,14 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 export const updateUserSchema = Joi.object({
-  firstName: Joi.string().trim(),
-  lastName: Joi.string().trim(),
-  email: Joi.string().email().trim(),
-  gender: Joi.string().lowercase().trim(),
-  phoneNumber: Joi.string().trim(),
-  NIN: Joi.string().length(11),
+     first_name: Joi.string().trim(),
+     last_name: Joi.string().trim(),
+     email: Joi.string().email().trim(),
+     gender: Joi.string().lowercase().trim(),
+     phone_number: Joi.string().trim(),
+     NIN: Joi.string().length(11),
 });
 
 export const verifyUserEmailSchema = Joi.object({
-  code: Joi.string().required().trim()
-})
+     code: Joi.string().required().trim(),
+});
