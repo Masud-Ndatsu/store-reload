@@ -6,14 +6,6 @@ class PaymentService {
      #api_url = process.env.FLW_BASE_URL;
      #secret_key = process.env.FLW_SECRET_KEY;
 
-     /* 
-          customer: {
-                email: "user@gmail.com",
-                phonenumber: "080****4528",
-                name: "Yemi Desola"
-     },
-             */
-
      initialize = async (data) => {
           const reference = `${data.order}${await genUniqueRef()}`;
           try {
@@ -33,17 +25,17 @@ class PaymentService {
 
                let txn = await new Transaction({
                     reference,
-                    order: data.item_id,
+                    order: data.order,
                     amount: Number(data.amount),
-                    user: data.user_id,
+                    user: data.user,
                }).save();
 
                return {
                     status: true,
                     data: {
-                         user: txn._doc.user_id,
+                         user: txn._doc.user,
                          email: data.email,
-                         order: txn._doc.item_id,
+                         order: txn._doc.order,
                          reference: txn._doc.reference,
                          amount: txn._doc.amount,
                          status: txn._doc.status,
@@ -72,7 +64,7 @@ class PaymentService {
           }
      };
 
-     handlePaystackWebhook = async (req) => {
+     handleWebhook = async (req) => {
           // If you specified a secret hash, check for the signature
           const secretHash = process.env.FLW_SECRET_HASH;
           const signature = req.headers["verif-hash"];
