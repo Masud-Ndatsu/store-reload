@@ -13,12 +13,12 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               shopName:
+ *                               shop_name:
  *                                  type: string
  *                               password:
  *                                  type: string
  *                            example:
- *                               shopName: Amuse Finance
+ *                               shop_name: Amuse Finance
  *                               password: financial
  *              responses:
  *                  "200":
