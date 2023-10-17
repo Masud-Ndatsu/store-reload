@@ -9,6 +9,7 @@ import { User } from "../../models/user.model.js";
 import { ShopModel } from "../../models/shop.model.js";
 import { Wallet } from "../../models/wallet.model.js";
 import walletService from "./wallet.service.js";
+import { SupportModel } from "../../models/support.model.js";
 
 class UserService {
      static async getUserProfile(userId) {
@@ -45,7 +46,12 @@ class UserService {
                }
                const shop = user.shop[0];
 
-               return { data: { ...user, shop } };
+               return {
+                    data: {
+                         ...user,
+                         shop,
+                    },
+               };
           } catch (error) {
                throw error;
           }
@@ -53,8 +59,8 @@ class UserService {
 
      static async getUser(req) {
           try {
-               const userId = req.params.userId;
-               const user = await User.findById(userId).lean();
+               const user_id = req.params.user_id;
+               const user = await User.findById(user_id).lean();
                if (!user) {
                     throw new AppError("user not found", 404);
                }
@@ -64,19 +70,11 @@ class UserService {
           }
      }
 
-     static async accountSetup(shopId, data = {}) {
+     static async accountSetup(shop_id, data = {}) {
           const { error, value } = updateUserSchema.validate(data);
           if (error) {
                throw new AppError(error.message);
           }
-          const user = await User.findOneAndUpdate(
-               { shop: shopId },
-               { shop: shopId },
-               {
-                    upsert: true,
-                    new: true,
-               }
-          ).lean();
 
           const { email } = value;
 
@@ -84,7 +82,7 @@ class UserService {
 
           await Promise.all([
                ShopModel.updateOne(
-                    { _id: shopId },
+                    { _id: shop_id },
                     { authCode },
                     { new: true }
                ),
@@ -95,34 +93,45 @@ class UserService {
                }),
           ]);
 
-          await User.findByIdAndUpdate(
-               user._id,
-               {
-                    ...value,
-               },
-               { new: true }
-          );
+          const [userExits, shop] = await Promise.all([
+               User.findOneAndUpdate(
+                    { shop: shop_id },
+                    {
+                         ...value,
+                    },
+                    { new: true }
+               ).lean(),
+               ShopModel.findById(shop_id).lean(),
+          ]);
 
-          const response = await walletService.createWallet({ email });
+          const response = await walletService.createWallet({
+               email,
+               account_name: shop.shop_name,
+               mobilenumber: userExits.phone_number,
+               country: "NG",
+          });
 
-          const { account_number, order_ref, amount } = response.data;
+          const { account_reference, amount, nuban, bank_name } = response.data;
+
+          console.log("response: ", response.data);
 
           await Wallet.create({
                balance: amount,
-               reference: order_ref,
-               user: user._id,
-               accountNumber: account_number,
+               wlt_reference: account_reference,
+               shop: shop._id,
+               account_number: nuban,
+               bank_name,
           });
 
           return;
      }
 
-     static async updateUser(shopId, data = {}) {
+     static async updateUser(shop_id, data = {}) {
           const { error, value } = updateUserSchema.validate(data);
           if (error) {
                throw new AppError(error.message);
           }
-          const user = await User.findOne({ shop: shopId }).lean();
+          const user = await User.findOne({ shop: shop_id }).lean();
 
           if (data.email && user.verified) {
                await User.findOneAndUpdate(
@@ -136,20 +145,26 @@ class UserService {
                );
           }
 
-          let authCode;
+          let auth_code;
 
           if (value.email && !user.verified) {
-               authCode = genAuthCode();
+               auth_code = genAuthCode();
                await Promise.all([
                     ShopModel.updateOne(
-                         { _id: shopId },
-                         { authCode },
-                         { new: true }
+                         {
+                              _id: shop_id,
+                         },
+                         {
+                              auth_code,
+                         },
+                         {
+                              new: true,
+                         }
                     ),
                     sendMail({
                          email: value.email,
                          subject: "Verify User Credentials",
-                         message: `<p>Heh! User. This is your OTP to very user credentials ${authCode}</p>`,
+                         message: `<p>Heh! User. This is your OTP to very user credentials ${auth_code}</p>`,
                     }),
                ]);
           }
@@ -159,13 +174,15 @@ class UserService {
                {
                     ...value,
                },
-               { new: true }
+               {
+                    new: true,
+               }
           );
 
           return updatedUser;
      }
-     static async verifyUser(userReq) {
-          const { error, value } = verifyUserEmailSchema.validate(userReq);
+     static async verifyUser(body) {
+          const { error, value } = verifyUserEmailSchema.validate(body);
 
           if (error) {
                throw new AppError(error.message, 400);
@@ -173,19 +190,42 @@ class UserService {
 
           const { code } = value;
 
-          const user = await ShopModel.findOne({ authCode: code })
+          const shop = await ShopModel.findOne({ auth_code: code })
                .select("_id")
                .lean();
 
-          if (!user) {
-               throw new AppError("user not found", 404);
+          if (!shop) {
+               throw new AppError("shop not found", 404);
           }
 
           await User.findOneAndUpdate(
-               { shop: user._id },
-               { verified: true },
-               { new: true }
+               {
+                    shop: shop._id,
+               },
+               {
+                    verified: true,
+               },
+               {
+                    new: true,
+               }
           );
+
+          return;
+     }
+
+     static async userSupportMessage(body) {
+          const { message, shop_id } = body;
+
+          const shop = await ShopModel.findById(shop_id).select("_id").lean();
+
+          const user = await User.findOne({ shop: shop._id })
+               .select("_id")
+               .lean();
+
+          await new SupportModel({
+               user: user._id,
+               message,
+          }).save();
 
           return;
      }
