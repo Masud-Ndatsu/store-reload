@@ -23,7 +23,6 @@ const schema = new Schema(
                ref: "orders",
                required: true,
           },
-
           status: {
                type: String,
                enum: ["successful", "pending", "failed"],

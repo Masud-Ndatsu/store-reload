@@ -4,11 +4,11 @@ const { Schema, model } = mongoose;
 
 const schema = new Schema(
      {
-          firstName: {
+          first_name: {
                type: String,
                default: "",
           },
-          lastName: {
+          last_name: {
                type: String,
                default: "",
           },
@@ -24,9 +24,12 @@ const schema = new Schema(
           password: {
                type: String,
           },
+          phone_number: {
+               type: String,
+               default: "",
+          },
           NIN: {
                type: String,
-               unique: true,
                default: "",
           },
           avatar: {
@@ -37,7 +40,7 @@ const schema = new Schema(
                type: Boolean,
                default: false,
           },
-          userType: {
+          user_type: {
                type: String,
                enum: ["admin", "user"],
                default: "user",
@@ -45,7 +48,6 @@ const schema = new Schema(
           shop: {
                type: Schema.Types.ObjectId,
                ref: "shops",
-               required: true,
           },
      },
      {

@@ -4,27 +4,27 @@ const { Schema, model } = mongoose;
 
 const schema = new Schema(
      {
-          user: {
+          shop: {
                type: Schema.Types.ObjectId,
-               ref: "users",
+               ref: "shops",
                required: true,
-               autopopulate: true,
           },
           balance: {
                type: Number,
                default: 0,
                min: 0,
           },
-          accountNumber: {
-               type: String,
-          },
-          reference: {
+          account_number: {
                type: String,
                required: true,
           },
-          isBlocked: {
-               type: Boolean,
-               default: false,
+          wlt_reference: {
+               type: String,
+               required: true,
+          },
+          bank_name: {
+               type: String,
+               required: true,
           },
      },
      {

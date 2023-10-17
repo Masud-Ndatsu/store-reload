@@ -21,13 +21,13 @@ const schema = new Schema(
                required: true,
                autopopulate: true,
           },
-          shippingAddress: {
+          shipping_address: {
                type: String,
           },
           reference: {
                type: String,
           },
-          dateOrdered: {
+          date_ordered: {
                type: Date,
                default: Date.now(),
           },
