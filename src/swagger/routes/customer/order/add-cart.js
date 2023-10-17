@@ -13,12 +13,12 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               productId:
+ *                               product_id:
  *                                  type: string
  *                               quantity:
  *                                  type: number
  *                            example:
- *                               productId: 6527e94fab99fe6977ed14c5
+ *                               product_id: 6527e94fab99fe6977ed14c5
  *                               quantity: 5
  *              responses:
  *                  "200":
