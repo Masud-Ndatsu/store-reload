@@ -3,20 +3,20 @@ import { Category } from "../../models/category.model.js";
 import { Product } from "../../models/product.model.js";
 
 class ProductService {
-     // Get Product By ProductID
+     // Get Product By product_id
      static getProduct = async (req) => {
           try {
-               const { productId } = req.params;
+               const { product_id } = req.params;
 
-               if (!productId) {
-                    throw new AppError("productId is required");
+               if (!product_id) {
+                    throw new AppError("product_id is required");
                }
 
                const [product] = await Product.aggregate([
                     {
                          $match: {
                               $expr: {
-                                   $eq: [{ $toString: "$_id" }, productId],
+                                   $eq: [{ $toString: "$_id" }, product_id],
                               },
                          },
                     },
@@ -33,7 +33,9 @@ class ProductService {
                if (!product) {
                     throw new AppError("product not found", 404);
                }
-               return { data: product };
+               return {
+                    data: product,
+               };
           } catch (error) {
                throw error;
           }
@@ -62,7 +64,7 @@ class ProductService {
                     },
                     {
                          $match: {
-                              $expr: { $eq: [{ $toString: "$type" }, type] },
+                              $expr: { $eq: ["$type", type] },
                          },
                     },
                     {
@@ -82,7 +84,7 @@ class ProductService {
                ]);
 
                // Get All Categories By Product Type
-               const catArr = await Category.find({ productType: type });
+               const catArr = await Category.find({ product_type: type });
 
                const categories = [
                     ...new Set(catArr.map((category) => category.name)),
@@ -113,10 +115,10 @@ class ProductService {
                const page = req.query.page ? Number(req.query.page) : 1;
                const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-               const { searchText } = req.query;
+               const { search_text } = req.query;
 
-               if (!searchText) {
-                    throw new AppError("searchText is required", 400);
+               if (!search_text) {
+                    throw new AppError("search_text is required", 400);
                }
 
                const products = await Product.aggregate([
@@ -134,7 +136,7 @@ class ProductService {
                                    {
                                         name: {
                                              $regex: new RegExp(
-                                                  searchText,
+                                                  search_text,
                                                   "i"
                                              ),
                                         },
@@ -142,7 +144,7 @@ class ProductService {
                                    {
                                         "category.name": {
                                              $regex: new RegExp(
-                                                  searchText,
+                                                  search_text,
                                                   "i"
                                              ),
                                         },
@@ -215,6 +217,19 @@ class ProductService {
                return { data: products };
           } catch (error) {
                console.log({ error });
+               throw error;
+          }
+     };
+
+     static getProductByTags = async (req) => {
+          const { tags } = req.query;
+          try {
+               const products = await Product.aggregate([
+                    {
+                         $match: {},
+                    },
+               ]);
+          } catch (error) {
                throw error;
           }
      };
