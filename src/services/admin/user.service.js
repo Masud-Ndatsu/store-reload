@@ -1,4 +1,4 @@
-import { Admin } from "../../models/admin.model";
+import { SupportModel } from "../../models/support.model";
 import { User } from "../../models/user.model";
 import { createHash } from "../../utils/auth.utils";
 import { uploadFile } from "../storage/cloudinary.service";
@@ -8,7 +8,7 @@ class UserService {
           const page = req.query.page ? Number(req.query.page) : 1;
           const limit = req.query.limit ? Number(req.query.limit) : 5;
 
-          const users = await User.find({ userType: "user" })
+          const users = await User.find({ user_type: "user" })
                .populate("shop")
                .skip((page - 1) * limit)
                .limit(limit);
@@ -16,11 +16,18 @@ class UserService {
           return { data: users };
      };
 
-     static getCustomerData = async (req) => {
+     static getCustomer = async (req) => {
           const { user_id } = req.params;
 
           const [user] = await User.aggregate([
-               { $match: { $expr: { $eq: [{ $toString: "$_id" }, user_id] } } },
+               {
+                    $match: {
+                         $expr: {
+                              $eq: [{ $toString: "$_id" }, user_id],
+                              $eq: [{ $toString: "$user_type" }, "user"],
+                         },
+                    },
+               },
                {
                     $project: {
                          password: 0,
@@ -31,9 +38,15 @@ class UserService {
           return { data: user };
      };
 
-     static getUserProfile = async (userId) => {
-          const [user] = await Admin.aggregate([
-               { $match: { $expr: { $eq: [{ $toString: "$_id" }, userId] } } },
+     static getUserProfile = async (user_id) => {
+          const [user] = await User.aggregate([
+               {
+                    $match: {
+                         $expr: {
+                              $eq: [{ $toString: "$_id" }, user_id.toString()],
+                         },
+                    },
+               },
                {
                     $project: {
                          password: 0,
@@ -42,9 +55,10 @@ class UserService {
           ]);
           return { data: user };
      };
-     static updateUser = async (req, userId) => {
+     static updateUser = async (req, user_id) => {
           let images;
           const { password } = req.body;
+
           if (req.files) {
                images = await uploadFile(req);
                req.body.avatar = images[0];
@@ -54,14 +68,49 @@ class UserService {
                req.body.password = await createHash(password);
           }
 
-          await Admin.findByIdAndUpdate(
-               userId,
+          await User.findByIdAndUpdate(
+               user_id,
                {
                     ...req.body,
                },
                { new: true }
           );
           return;
+     };
+
+     static getSupportMessages = async () => {
+          const supportMessages = await SupportModel.aggregate([
+               {
+                    $match: {},
+               },
+               {
+                    $lookup: {
+                         from: "users",
+                         localField: "user",
+                         foreignField: "_id",
+                         as: "user",
+                         pipeline: [
+                              {
+                                   $lookup: {
+                                        from: "shops",
+                                        localField: "shop",
+                                        foreignField: "_id",
+                                        as: "shop",
+                                   },
+                              },
+                         ],
+                    },
+               },
+               {
+                    $project: {
+                         message: 1,
+                         user: { $arrayElemAt: ["$user", 0] },
+                         createdAt: 1,
+                    },
+               },
+          ]);
+
+          return { data: supportMessages };
      };
 }
 
