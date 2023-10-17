@@ -13,22 +13,22 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               orderedItems:
+ *                               ordered_items:
  *                                  type: array
  *                                  items:
  *                                     type: string
- *                               totalPrice:
+ *                               total_price:
  *                                  type: number
- *                               shippingAddress:
+ *                               shipping_address:
  *                                  type: string
  *                            example:
- *                               orderedItems:
+ *                               ordered_items:
  *                                       - "6527e94fab99fe6977ed14c5"
  *                                       - "6527e94fab99fe6977ed14c5"
  *                                       - "6527e94fab99fe6977ed14c5"
  *                                       - "6527e94fab99fe6977ed14c5"
- *                               totalPrice: 50000
- *                               shippingAddress: Gwagwalada, Abuja, Nigeria
+ *                               total_price: 50000
+ *                               shipping_address: Gwagwalada, Abuja, Nigeria
  *              responses:
  *                  "200":
  *                      description: Resquest Successful
