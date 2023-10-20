@@ -1,5 +1,6 @@
 import { AppError } from "../../errors/index.js";
 import { ShopModel } from "../../models/shop.model.js";
+import { User } from "../../models/user.model.js";
 import {
      createHash,
      genAuthCode,
