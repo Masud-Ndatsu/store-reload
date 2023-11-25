@@ -1,8 +1,8 @@
 import UserService from "../../services/admin/user.service";
 
-const getAllUsers = async (req, res, next) => {
+const getCustomers = async (req, res, next) => {
      try {
-          const { data } = await UserService.getAllUsers(req);
+          const { data } = await UserService.getCustomers(req);
           return res.status(200).json({
                status: true,
                data,
@@ -12,7 +12,7 @@ const getAllUsers = async (req, res, next) => {
           next(error);
      }
 };
-const getUser = async (req, res, next) => {
+const getCustomer = async (req, res, next) => {
      try {
           const { data } = await UserService.getCustomer(req);
           return res.status(200).json({
@@ -25,11 +25,9 @@ const getUser = async (req, res, next) => {
      }
 };
 
-const getUserProfile = async (req, res, next) => {
+const getProfile = async (req, res, next) => {
      try {
-          const user_id = res.locals.user._id;
-
-          const { data } = await UserService.getUserProfile(user_id);
+          const { data } = await UserService.getProfile(res.locals.user._id);
           return res.status(200).json({
                status: true,
                data,
@@ -40,9 +38,9 @@ const getUserProfile = async (req, res, next) => {
      }
 };
 
-const updateUser = async (req, res, next) => {
+const updateProfile = async (req, res, next) => {
      try {
-          await UserService.updateUser(req, res.locals.user._id);
+          await UserService.updateProfile(req, res.locals.user._id);
           return res.status(200).json({
                status: true,
                data: null,
@@ -53,9 +51,9 @@ const updateUser = async (req, res, next) => {
      }
 };
 
-const getSupportMessages = async (_req, res, next) => {
+const getCustomerSupport = async (_req, res, next) => {
      try {
-          const { data } = await UserService.getSupportMessages();
+          const { data } = await UserService.getCustomerSupport();
           return res.status(200).json({
                status: true,
                data,
@@ -66,10 +64,24 @@ const getSupportMessages = async (_req, res, next) => {
      }
 };
 
-export default {
-     getAllUsers,
-     getUser,
-     getUserProfile,
-     updateUser,
-     getSupportMessages,
+const replySupportMessages = async (req, res, next) => {
+     try {
+          await UserService.replySupportMessages(req, res.locals.user._id);
+          return res.status(200).json({
+               status: true,
+               data: null,
+               message: "Request successful",
+          });
+     } catch (error) {
+          next(error);
+     }
+};
+
+export {
+     getCustomers,
+     getProfile,
+     getCustomer,
+     updateProfile,
+     getCustomerSupport,
+     replySupportMessages,
 };

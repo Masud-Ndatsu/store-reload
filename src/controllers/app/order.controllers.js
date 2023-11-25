@@ -2,8 +2,7 @@ import OrderService from "../../services/app/order.service";
 
 const addToCart = async (req, res, next) => {
      try {
-          const userId = res.locals.user._id;
-          await OrderService.addItemCart(req, userId);
+          await OrderService.addItemCart(req, res.locals.user._id);
           return res.status(200).json({
                status: true,
                data: null,
@@ -15,8 +14,7 @@ const addToCart = async (req, res, next) => {
 };
 const updateCartItem = async (req, res, next) => {
      try {
-          const userId = res.locals.user._id;
-          await OrderService.updateCartItem(req, userId);
+          await OrderService.updateCartItem(req, res.locals.user._id);
           return res.status(200).json({
                status: true,
                data: null,
@@ -28,8 +26,9 @@ const updateCartItem = async (req, res, next) => {
 };
 const getUserCart = async (req, res, next) => {
      try {
-          const userId = res.locals.user._id;
-          const { data } = await OrderService.getUserCartItems(userId);
+          const { data } = await OrderService.getUserCartItems(
+               res.locals.user._id
+          );
           return res.status(200).json({
                status: true,
                data,
@@ -41,8 +40,10 @@ const getUserCart = async (req, res, next) => {
 };
 const createOrder = async (req, res, next) => {
      try {
-          const userId = res.locals.user._id;
-          const { data } = await OrderService.createOrder(req, userId);
+          const { data } = await OrderService.createOrder(
+               req,
+               res.locals.user._id
+          );
           return res.status(200).json({
                status: true,
                data,
@@ -66,8 +67,10 @@ const getOrder = async (req, res, next) => {
 };
 const getOrders = async (req, res, next) => {
      try {
-          const userId = res.locals.user._id;
-          const { data } = await OrderService.getOrdersPlaced(req, userId);
+          const { data } = await OrderService.getOrdersPlaced(
+               req,
+               res.locals.user._id
+          );
           return res.status(200).json({
                status: true,
                data,
