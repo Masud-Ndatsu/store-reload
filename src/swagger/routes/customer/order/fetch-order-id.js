@@ -1,6 +1,6 @@
 /**
  * @openapi
- * /customer/orders/{orderId}:
+ * /customer/orders/{order_id}:
  *          get:
  *              summary: Customer Order by orderId
  *              operationId: customer-order-id

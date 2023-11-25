@@ -1,6 +1,6 @@
 /**
  * @openapi
- * /customer/orders/create:
+ * /customer/orders:
  *          post:
  *              summary: Customer Order Create
  *              operationId: customer-order-create

@@ -14,6 +14,7 @@ export const loginSchema = Joi.object({
 
 export const resetPasswordOTPSchema = Joi.object({
      code: Joi.string().required().trim(),
+     email: Joi.string().required().trim(),
 });
 
 export const resetPasswordEmailSchema = Joi.object({
@@ -21,6 +22,6 @@ export const resetPasswordEmailSchema = Joi.object({
 });
 
 export const resetPasswordSchema = Joi.object({
-     user_id: Joi.string().required().trim(),
-     password: Joi.string().required().trim(),
+     email: Joi.string().required().trim(),
+     new_password: Joi.string().required().trim(),
 });

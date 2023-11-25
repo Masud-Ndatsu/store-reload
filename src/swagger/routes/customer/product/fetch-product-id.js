@@ -1,6 +1,6 @@
 /**
  * @openapi
- * /customer/products/{productId}:
+ * /customer/products/{product_id}:
  *          get:
  *              summary: Customer Product by productId
  *              operationId: customer-product-id

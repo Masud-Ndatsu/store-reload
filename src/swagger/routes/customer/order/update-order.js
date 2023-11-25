@@ -1,6 +1,6 @@
 /**
  * @openapi
- * /customer/orders/{orderId}:
+ * /customer/orders/{order_id}:
  *          put:
  *              summary: Update Order by orderId
  *              operationId: update-order-id
@@ -8,7 +8,7 @@
  *                 - Customer
  *              parameters:
  *                  - in: path
- *                    name: orderId
+ *                    name: order_id
  *                    required: true
  *              requestBody:
  *                   required: true

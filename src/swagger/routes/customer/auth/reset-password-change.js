@@ -13,9 +13,9 @@
  *                          schema:
  *                            type: object
  *                            properties:
- *                               user_id:
+ *                               email:
  *                                  type: string
- *                               password:
+ *                               new_password:
  *                                  type: string
  *              responses:
  *                  "200":

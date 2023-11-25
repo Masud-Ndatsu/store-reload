@@ -15,6 +15,8 @@
  *                            properties:
  *                               code:
  *                                  type: string
+ *                               email:
+ *                                  type: string
  *              responses:
  *                  "200":
  *                      description: Resquest Successful

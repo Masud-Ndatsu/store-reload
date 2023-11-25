@@ -1,6 +1,6 @@
 /**
  * @openapi
- * /customer/orders/{orderId}:
+ * /customer/orders/{order_id}:
  *          delete:
  *              summary: Delete Order by orderId
  *              operationId: delete-order-id
@@ -8,7 +8,7 @@
  *                 - Customer
  *              parameters:
  *                  - in: path
- *                    name: orderId
+ *                    name: order_id
  *                    required: true
  *              responses:
  *                  "200":

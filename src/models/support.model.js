@@ -13,19 +13,17 @@ const schema = new Schema(
                type: String,
                required: true,
           },
-          replies: [
-               {
-                    user: {
-                         type: Schema.Types.ObjectId,
-                         ref: "users",
-                         required: true,
-                    },
-                    reply: {
-                         type: String,
-                         required: true,
-                    },
+          replies: {
+               user: {
+                    type: Schema.Types.ObjectId,
+                    ref: "users",
+                    required: true,
                },
-          ],
+               reply: {
+                    type: String,
+                    required: true,
+               },
+          },
      },
 
      {

@@ -1,8 +1,8 @@
 import { Router } from "express";
-import controllers from "../../controllers/app/payment.controllers.js";
+import { handleWebhook } from "../../controllers/app/payment.controllers.js";
 
 const router = Router();
 
-router.post("/webhook", controllers.handleWebhook);
+router.post("/webhook", handleWebhook);
 
 export default router;

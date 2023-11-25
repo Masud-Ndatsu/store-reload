@@ -24,6 +24,9 @@ const schema = new Schema(
           auth_code: {
                type: String,
           },
+          auth_code_created: {
+               type: String,
+          },
           reset_token: {
                type: String,
           },
