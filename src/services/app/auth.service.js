@@ -66,6 +66,13 @@ class AuthService {
                               },
                          },
                     },
+                    {
+                         $project: {
+                              __v: 0,
+                              createdAt: 0,
+                              updatedAt: 0,
+                         },
+                    },
                ]);
                if (!shopExits) {
                     throw new AppError("shop name not found", 404);
@@ -74,7 +81,7 @@ class AuthService {
                const isValid = await verifyHash(password, shopExits.password);
 
                if (!isValid) {
-                    throw new AppError("Incorrect password", 400);
+                    throw new AppError("incorrect password", 400);
                }
 
                const token = await generateToken(
@@ -83,10 +90,7 @@ class AuthService {
                );
 
                return {
-                    data: {
-                         user: shopExits,
-                         token,
-                    },
+                    data: { ...shopExits, token },
                };
           } catch (error) {
                throw error;
@@ -106,7 +110,7 @@ class AuthService {
                const shop = await ShopModel.findOne({ email }).lean();
 
                if (!shop) {
-                    throw new AppError("shop not  found", 404);
+                    throw new AppError("shop not found", 404);
                }
 
                const code = genAuthCode();
@@ -132,18 +136,26 @@ class AuthService {
      }
      static async resetPasswordOTP(req) {
           try {
-               const { code } = req.body;
+               const { code, email } = req.body;
 
                const { error } = resetPasswordOTPSchema.validate(req.body);
 
                if (error) {
                     throw new AppError(error.message, 400);
                }
+               const user = await User.findOne({ email });
 
-               const shop = await ShopModel.findOne({ code }).lean();
+               if (user) {
+                    throw new AppError("user not found", 404);
+               }
+
+               const shop = await ShopModel.findOne({
+                    code,
+                    _id: user.shop,
+               }).lean();
 
                if (!shop) {
-                    throw new AppError("shop not  found", 404);
+                    throw new AppError("shop not found", 404);
                }
 
                return { data: shop };
@@ -156,22 +168,20 @@ class AuthService {
           try {
                const { error, value } = resetPasswordSchema.validate(req.body);
 
-               const { shop_id, password } = value;
+               const { email, new_password } = value;
 
                if (error) {
                     throw new AppError(error.message, 400);
                }
-               const shop = await ShopModel.findById(shop_id)
-                    .select("_id")
-                    .lean();
+               const user = await User.findOne({ email }).select("shop").lean();
 
-               if (!shop) {
+               if (!user) {
                     throw new AppError("shop not found", 404);
                }
-               const hashpwd = await createHash(password);
+               const hashpwd = await createHash(new_password);
 
                await ShopModel.findOneAndUpdate(
-                    { _id: shop._id },
+                    { _id: user.shop },
                     {
                          password: hashpwd,
                     },

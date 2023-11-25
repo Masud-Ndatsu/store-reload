@@ -84,7 +84,11 @@ class ProductService {
                ]);
 
                // Get All Categories By Product Type
-               const catArr = await Category.find({ product_type: type });
+               const catArr = await Category.aggregate([
+                    {
+                         $match: { product_type: type },
+                    },
+               ]);
 
                const categories = [
                     ...new Set(catArr.map((category) => category.name)),

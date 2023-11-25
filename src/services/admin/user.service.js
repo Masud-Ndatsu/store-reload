@@ -4,7 +4,7 @@ import { createHash } from "../../utils/auth.utils";
 import { uploadFile } from "../storage/cloudinary.service";
 
 class UserService {
-     static getAllUsers = async (req) => {
+     static getCustomers = async (req) => {
           const page = req.query.page ? Number(req.query.page) : 1;
           const limit = req.query.limit ? Number(req.query.limit) : 5;
 
@@ -38,7 +38,7 @@ class UserService {
           return { data: user };
      };
 
-     static getUserProfile = async (user_id) => {
+     static getProfile = async (user_id) => {
           const [user] = await User.aggregate([
                {
                     $match: {
@@ -55,7 +55,7 @@ class UserService {
           ]);
           return { data: user };
      };
-     static updateUser = async (req, user_id) => {
+     static updateProfile = async (req, user_id) => {
           let images;
           const { password } = req.body;
 
@@ -78,7 +78,7 @@ class UserService {
           return;
      };
 
-     static getSupportMessages = async () => {
+     static getCustomerSupport = async () => {
           const supportMessages = await SupportModel.aggregate([
                {
                     $match: {},
@@ -111,6 +111,24 @@ class UserService {
           ]);
 
           return { data: supportMessages };
+     };
+
+     static replySupportMessages = async (req, user_id) => {
+          const { support_id } = req.params;
+          const { message } = req.body;
+
+          await SupportModel.findOneAndUpdate(
+               { _id: support_id },
+               {
+                    replies: {
+                         user: user_id,
+                         message,
+                    },
+               },
+               { new: true }
+          );
+
+          return;
      };
 }
 

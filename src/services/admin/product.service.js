@@ -43,10 +43,16 @@ class ProductService {
                     throw new AppError("type is required", 400);
                }
 
-               const products = await Product.find({ type })
-                    .limit(limit)
-                    .skip((page - 1) * limit)
-                    .lean();
+               const products = await Product.aggregate([
+                    { $match: { type } },
+                    ,
+                    {
+                         $limit: limit,
+                    },
+                    {
+                         $skip: (page - 1) * limit,
+                    },
+               ]);
 
                return { data: products };
           } catch (error) {

@@ -46,10 +46,11 @@ export const uploadFile = async (req) => {
 
           return url;
      } catch (error) {
+          console.log("IMAGE ERROR: ", error);
+          throw error;
+     } finally {
           for (let file of req.files) {
                fs.unlinkSync(file.path);
           }
-          console.log("IMAGE ERROR: ", error);
-          throw error;
      }
 };

@@ -78,31 +78,28 @@ class UserService {
 
           const { email } = value;
 
-          let authCode = genAuthCode();
+          let auth_code = genAuthCode();
 
-          await Promise.all([
+          const [shop] = await Promise.all([
                ShopModel.updateOne(
                     { _id: shop_id },
-                    { authCode },
+                    { auth_code },
                     { new: true }
                ),
                sendMail({
                     email,
                     subject: "Verify User Credentials",
-                    message: `<p>Heh! User. This is your OTP to very user credentials ${authCode}</p>`,
+                    message: `<p>Heh! User. This is your OTP to very user credentials ${auth_code}</p>`,
                }),
           ]);
 
-          const [userExits, shop] = await Promise.all([
-               User.findOneAndUpdate(
-                    { shop: shop_id },
-                    {
-                         ...value,
-                    },
-                    { new: true }
-               ).lean(),
-               ShopModel.findById(shop_id).lean(),
-          ]);
+          const userExits = await User.findOneAndUpdate(
+               { shop: shop_id },
+               {
+                    ...value,
+               },
+               { new: true }
+          ).lean();
 
           const response = await walletService.createWallet({
                email,
@@ -188,7 +185,7 @@ class UserService {
                throw new AppError(error.message, 400);
           }
 
-          const { code } = value;
+          const { code, email } = value;
 
           const shop = await ShopModel.findOne({ auth_code: code })
                .select("_id")
@@ -198,9 +195,10 @@ class UserService {
                throw new AppError("shop not found", 404);
           }
 
-          await User.findOneAndUpdate(
+          const user = await User.findOneAndUpdate(
                {
                     shop: shop._id,
+                    email,
                },
                {
                     verified: true,
@@ -209,6 +207,10 @@ class UserService {
                     new: true,
                }
           );
+
+          if (user) {
+               throw new AppError("user not found", 404);
+          }
 
           return;
      }

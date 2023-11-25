@@ -63,7 +63,7 @@ class OrderService {
      };
 
      static getUserCartItems = async (user_id) => {
-          const cart_items = await OrderItem.aggregate([
+          const items = await OrderItem.aggregate([
                {
                     $lookup: {
                          from: "products",
@@ -89,22 +89,22 @@ class OrderService {
                },
           ]);
 
-          if (cart_items.length === 0) {
+          if (items.length === 0) {
                throw new AppError("Cart is empty", 404);
           }
 
-          const cartItem_ids = cart_items.map((cartItem) => cartItem._id);
+          const itemsid = items.map((item) => item._id);
 
-          const total_price = cart_items.reduce(
+          const totalPrice = items.reduce(
                (prev, item) => prev + item.product.price * item.quantity,
                0
           );
 
           return {
                data: {
-                    cart_items,
-                    cartItem_ids,
-                    total_price,
+                    items,
+                    itemsid,
+                    totalPrice,
                },
           };
      };
